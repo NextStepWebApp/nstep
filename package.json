@@ -1,0 +1,10 @@
+{
+  "nextstep": {
+    "name": "NextStep Web App",
+    "version": "v0.0.0",
+    "api": {
+      "releases": "https://api.github.com/repos/NextStepWebApp/NextStep/releases/latest",
+      "repo": "https://api.github.com/repos/NextStepWebApp/NextStep"
+    }
+  }
+}
