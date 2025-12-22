@@ -18,13 +18,11 @@ func main() {
 	// nstep commands
 	switch command {
 	case "update":
-		fmt.Println("updater")
+		UpdateNextStep()
 	case "rollback":
 		fmt.Println("rollbacker")
 	case "status":
 		fmt.Println("statuses")
-	case "list":
-		fmt.Println("lists")
 	case "help", "--help", "-h":
 		printUsage()
 	default:
@@ -51,9 +49,7 @@ func printUsage() {
 	fmt.Println("	nstep <command>")
 	fmt.Println()
 	fmt.Println("Commands:")
-	fmt.Println("	install      Install NextStep web application")
 	fmt.Println("	update       Update NextStep to latest version")
 	fmt.Println("	rollback     Rollback to previous version")
 	fmt.Println("	status       Show installation status and health")
-	fmt.Println("	restart      Restart Apache and PHP-FPM services")
 }
