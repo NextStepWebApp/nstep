@@ -25,6 +25,7 @@ func main() {
 		fmt.Println("statuses")
 	case "help", "--help", "-h":
 		printUsage()
+		os.Exit(0)
 	default:
 		fmt.Fprintf(os.Stderr, "Unknown command: %s (use -h for help)\n", command)
 		os.Exit(1)
