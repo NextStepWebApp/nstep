@@ -21,8 +21,6 @@ func main() {
 		UpdateNextStep()
 	case "rollback":
 		fmt.Println("rollbacker")
-	case "status":
-		fmt.Println("statuses")
 	case "help", "--help", "-h":
 		printUsage()
 		os.Exit(0)
@@ -52,5 +50,4 @@ func printUsage() {
 	fmt.Println("Commands:")
 	fmt.Println("	update       Update NextStep to latest version")
 	fmt.Println("	rollback     Rollback to previous version")
-	fmt.Println("	status       Show installation status and health")
 }
