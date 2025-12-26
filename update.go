@@ -1,10 +1,12 @@
 package main
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
 )
 
 // For online json
@@ -36,18 +38,55 @@ type versionCheck struct {
 }
 
 func UpdateNextStep() {
-	result, err := versionchecker()
+	resultversion, err := versionchecker()
 	if err != nil {
-		fmt.Printf("Error checking version: %v\n", err)
+		fmt.Fprintln(os.Stderr, "Error checking version: ", err)
 		os.Exit(1)
 	}
 
-	fmt.Println(result.Message)
-	if result.UpdateAvailable {
-		fmt.Printf("New version available: %s\n", result.LatestVersion)
-		fmt.Printf("Download: %s\n", result.DownloadURL)
-		fmt.Printf("Release notes: %s\n", result.ReleaseNotes)
+	fmt.Println(resultversion.Message)
+	if resultversion.UpdateAvailable {
+		fmt.Printf("New version available: %s\n", resultversion.LatestVersion)
+		fmt.Printf("Download: %s\n", resultversion.DownloadURL)
+		fmt.Printf("Release notes: %s\n", resultversion.ReleaseNotes)
 	}
+
+	// confirmation part if there is a update
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Print("Proceed with installation? [Y/n] ")
+
+	response, err := reader.ReadString('\n')
+
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "Error reading input: ", err)
+		os.Exit(1)
+	}
+
+	response = strings.TrimSpace(response)
+
+	if response == "Y" || response == "y" || response == "" {
+
+		// format filepath
+		filename := fmt.Sprintf("nextstep_%s.tar.gz", resultversion.LatestVersion)
+		filepath := fmt.Sprintf("/home/william/Downloads/%s", filename)
+
+		_, err := Downloadpackage(resultversion.DownloadURL, filepath)
+
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "Error downloading package: ", err)
+			os.Exit(1)
+		}
+
+		// Extract the downloaded package, function from download.go
+
+		//Extractpackage()
+
+		os.Exit(0)
+
+	} else {
+		fmt.Println("Installation cancelled")
+	}
+
 	os.Exit(0)
 }
 
