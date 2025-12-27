@@ -13,6 +13,7 @@ import (
 type packageOnlineJson struct {
 	Version      string `json:"version"`
 	Url          string `json:"download_url"`
+	Checksum     string `json:"checksum"`
 	ReleaseNotes string `json:"release_notes"`
 }
 
@@ -35,6 +36,7 @@ type versionCheck struct {
 	Message         string
 	DownloadURL     string
 	ReleaseNotes    string
+	Checksum        string
 }
 
 func UpdateNextStep(cfg config) {
@@ -84,12 +86,23 @@ func UpdateNextStep(cfg config) {
 		message, err = Downloadpackage(resultversion.DownloadURL, filepath)
 
 		if err != nil {
-			fmt.Fprintln(os.Stderr, "Error downloading package: ", err)
+			fmt.Fprintln(os.Stderr, "Error downloading package", err)
 			os.Exit(1)
 		}
 		println(message)
 
-		// Extract the downloaded package, function from download.go
+		// Verifying package integrity
+
+		err = VerifyChecksum(filepath, resultversion.Checksum)
+
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "Verification failed", err)
+			os.Exit(1)
+		} else {
+			fmt.Println("Package verified successfully")
+		}
+
+		// Extract the downloaded package, function from package.go
 		versionpath := cfg.GetVersionPath()
 		message, err = Extractpackage(filepath, versionpath)
 		if err != nil {
@@ -156,6 +169,7 @@ func versionchecker(cfg config) (*versionCheck, error) {
 		LatestVersion:  onlineVersion,
 		DownloadURL:    packageOnlineItem.Url,
 		ReleaseNotes:   packageOnlineItem.ReleaseNotes,
+		Checksum:       packageOnlineItem.Checksum,
 	}
 
 	// Compare the versions to see if an update is needed
