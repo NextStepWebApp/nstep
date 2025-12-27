@@ -102,7 +102,7 @@ func UpdateNextStep() {
 func versionchecker() (*versionCheck, error) {
 	// Get local version
 
-	configpath, err := Getpackagedir("/home/william/Documents/programming/PWS/nstep/config.json")
+	configpath, err := Getpackagedir(Nstepconfigfile)
 	if err != nil {
 		return nil, fmt.Errorf("cannot open config: %w", err)
 	}

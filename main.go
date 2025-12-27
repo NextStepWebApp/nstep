@@ -6,6 +6,10 @@ import (
 	"os"
 )
 
+const (
+	Nstepconfigfile = "/home/william/Documents/programming/PWS/nstep/config.json"
+)
+
 func main() {
 
 	// Get the command and error handling

@@ -1,3 +1,10 @@
 {
-  "file_path": "/home/william/Documents/programming/PWS/nstep/package.json"
+  "packages": {
+    "file_path": "/home/william/Documents/programming/PWS/nstep/package.json"
+  },
+  "nstep": {
+    "nstepdownloadpath": "/var/lib/nstep/downloads",
+    "nstepversionpath": "/var/lib/nstep/versions",
+    "nstepcurrentpath": "/var/lib/nstep/current"
+  }
 }
