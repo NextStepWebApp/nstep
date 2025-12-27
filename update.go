@@ -64,7 +64,8 @@ func UpdateNextStep(cfg config) {
 
 	response = strings.TrimSpace(response)
 
-	if response == "Y" || response == "y" || response == "" {
+	if response == "Y" || response == "y" || response == "" ||
+		response == "Yes" || response == "yes" {
 		var message string
 		var err error
 
