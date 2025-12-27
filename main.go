@@ -7,10 +7,16 @@ import (
 )
 
 const (
-	Nstepconfigfile = "/home/william/Documents/programming/PWS/nstep/config.json"
+	nstepconfigfile = "/home/william/Documents/programming/PWS/nstep/config.json"
 )
 
 func main() {
+	// Load the config
+	cfg, err := Loadconfig(nstepconfigfile)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
 
 	// Get the command and error handling
 	command, err := getCommand(os.Args[1:])
@@ -22,7 +28,7 @@ func main() {
 	// nstep commands
 	switch command {
 	case "update":
-		UpdateNextStep()
+		UpdateNextStep(cfg)
 	case "rollback":
 		fmt.Println("rollbacker")
 	case "help", "--help", "-h":

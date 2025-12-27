@@ -37,8 +37,8 @@ type versionCheck struct {
 	ReleaseNotes    string
 }
 
-func UpdateNextStep() {
-	resultversion, err := versionchecker()
+func UpdateNextStep(cfg config) {
+	resultversion, err := versionchecker(cfg)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "Error checking version: ", err)
 		os.Exit(1)
@@ -67,9 +67,18 @@ func UpdateNextStep() {
 	if response == "Y" || response == "y" || response == "" {
 		var message string
 		var err error
-		// format filepath
+
+		// Check to see if the directories exist
+		err = cfg.Diravailable()
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "Error creating filepath", err)
+			os.Exit(1)
+		}
+
+		// format filepath to store download
+		downloadpath := cfg.GetDownloadPath()
 		filename := fmt.Sprintf("nextstep_%s.tar.gz", resultversion.LatestVersion)
-		filepath := fmt.Sprintf("/home/william/Downloads/%s", filename)
+		filepath := fmt.Sprintf("%s/%s", downloadpath, filename)
 
 		message, err = Downloadpackage(resultversion.DownloadURL, filepath)
 
@@ -80,13 +89,15 @@ func UpdateNextStep() {
 		println(message)
 
 		// Extract the downloaded package, function from download.go
-
-		message, err = Extractpackage(filepath, "/home/william/Downloads/")
+		versionpath := cfg.GetVersionPath()
+		message, err = Extractpackage(filepath, versionpath)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, "Error extracting package: ", err)
 			os.Exit(1)
 		}
 		println(message)
+
+		// Symlink the new version to the current one
 
 		os.Exit(0)
 
@@ -99,15 +110,12 @@ func UpdateNextStep() {
 
 // This function gets the local version and remote project version
 // And then compares them to see if a new version came out
-func versionchecker() (*versionCheck, error) {
+func versionchecker(cfg config) (*versionCheck, error) {
 	// Get local version
 
-	configpath, err := Getpackagedir(Nstepconfigfile)
-	if err != nil {
-		return nil, fmt.Errorf("cannot open config: %w", err)
-	}
+	packagepath := cfg.GetPackagePath()
 
-	jsonLocalFile, err := os.Open(configpath)
+	jsonLocalFile, err := os.Open(packagepath)
 	if err != nil {
 		return nil, fmt.Errorf("cannot open package.json: %w", err)
 	}
