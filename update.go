@@ -65,21 +65,28 @@ func UpdateNextStep() {
 	response = strings.TrimSpace(response)
 
 	if response == "Y" || response == "y" || response == "" {
-
+		var message string
+		var err error
 		// format filepath
 		filename := fmt.Sprintf("nextstep_%s.tar.gz", resultversion.LatestVersion)
 		filepath := fmt.Sprintf("/home/william/Downloads/%s", filename)
 
-		_, err := Downloadpackage(resultversion.DownloadURL, filepath)
+		message, err = Downloadpackage(resultversion.DownloadURL, filepath)
 
 		if err != nil {
 			fmt.Fprintln(os.Stderr, "Error downloading package: ", err)
 			os.Exit(1)
 		}
+		println(message)
 
 		// Extract the downloaded package, function from download.go
 
-		//Extractpackage()
+		message, err = Extractpackage(filepath, "/home/william/Downloads/")
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "Error extracting package: ", err)
+			os.Exit(1)
+		}
+		println(message)
 
 		os.Exit(0)
 

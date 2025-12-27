@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"os/exec"
 )
 
 func Downloadpackage(url, filepath string) (message string, err error) {
@@ -32,6 +33,14 @@ func Downloadpackage(url, filepath string) (message string, err error) {
 	return "Download completed successfully", nil
 }
 
-/*func Extractpackage(filepath string) (message string, err error) {
-out := tar.NewWriter(filepath)
-}*/
+func Extractpackage(targzpath, destdir string) (message string, err error) {
+	if err := os.MkdirAll(destdir, 0755); err != nil {
+		return "", fmt.Errorf("cannot create destination directory: %w", err)
+	}
+
+	cmd := exec.Command("tar", "-xzf", targzpath, "-C", destdir)
+	if err := cmd.Run(); err != nil {
+		return "", fmt.Errorf("cannot extract tar.gz: %w", err)
+	}
+	return "Extraction completed successfully", nil
+}
