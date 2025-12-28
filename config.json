@@ -5,6 +5,7 @@
   "nstep": {
     "nstepdownloadpath": "/var/lib/nstep/downloads",
     "nstepversionpath": "/var/lib/nstep/versions",
-    "nstepcurrentpath": "/var/lib/nstep/current"
+    "nstepcurrentpath": "/var/lib/nstep/current",
+    "lockfile": "/var/lib/nstep/update.lock"
   }
 }

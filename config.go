@@ -20,11 +20,17 @@ type nstepjson struct {
 	NstepDownloadPath string `json:"nstepdownloadpath"`
 	NstepVersionPath  string `json:"nstepversionpath"`
 	NstepCurrentPath  string `json:"nstepcurrentpath"`
+	Lockfile          string `json:"lockfile"`
 }
 
 // Functions to get specific info from the json
+
 func (c config) GetPackagePath() string {
 	return c.Packages.FilePath
+}
+
+func (c config) GetLockFilePath() string {
+	return c.Nstep.Lockfile
 }
 
 func (c config) GetDownloadPath() string {

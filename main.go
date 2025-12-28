@@ -18,6 +18,13 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Check to see if the directories exist (config.go)
+	err = cfg.Diravailable()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "Error creating filepath", err)
+		os.Exit(1)
+	}
+
 	// Get the command and error handling
 	command, err := getCommand(os.Args[1:])
 	if err != nil {
@@ -60,4 +67,5 @@ func printUsage() {
 	fmt.Println("Commands:")
 	fmt.Println("	update       Update NextStep to latest version")
 	fmt.Println("	rollback     Rollback to previous version")
+	fmt.Println("	unlock       Clear stuck update lock")
 }

@@ -71,10 +71,11 @@ func UpdateNextStep(cfg config) {
 		var message string
 		var err error
 
-		// Check to see if the directories exist
-		err = cfg.Diravailable()
+		// Nstep lock check
+		err = LockNstep(cfg)
+
 		if err != nil {
-			fmt.Fprintln(os.Stderr, "Error creating filepath", err)
+			fmt.Fprintln(os.Stderr, "Error update.lock", err)
 			os.Exit(1)
 		}
 
