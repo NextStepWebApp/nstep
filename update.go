@@ -39,11 +39,10 @@ type versionCheck struct {
 	Checksum        string
 }
 
-func UpdateNextStep(cfg config) {
+func UpdateNextStep(cfg config) error {
 	resultversion, err := versionchecker(cfg)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "Error checking version: ", err)
-		os.Exit(1)
+		return fmt.Errorf("Error checking version %w", err)
 	}
 
 	fmt.Println(resultversion.Message)
@@ -60,8 +59,7 @@ func UpdateNextStep(cfg config) {
 	response, err := reader.ReadString('\n')
 
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "Error reading input: ", err)
-		os.Exit(1)
+		return fmt.Errorf("Error reading input %w", err)
 	}
 
 	response = strings.TrimSpace(response)
@@ -72,12 +70,12 @@ func UpdateNextStep(cfg config) {
 		var err error
 
 		// Nstep lock check
-		err = LockNstep(cfg)
-
+		lockfile, err := LockNstep(cfg)
 		if err != nil {
-			fmt.Fprintln(os.Stderr, "Error update.lock", err)
-			os.Exit(1)
+			return fmt.Errorf("Error update.lock %w", err)
 		}
+		defer lockfile.Close()
+		defer os.Remove(cfg.GetLockFilePath())
 
 		// format filepath to store download
 		downloadpath := cfg.GetDownloadPath()
@@ -87,8 +85,7 @@ func UpdateNextStep(cfg config) {
 		message, err = Downloadpackage(resultversion.DownloadURL, filepath)
 
 		if err != nil {
-			fmt.Fprintln(os.Stderr, "Error downloading package", err)
-			os.Exit(1)
+			return fmt.Errorf("Error downloading package %w", err)
 		}
 		println(message)
 
@@ -97,8 +94,7 @@ func UpdateNextStep(cfg config) {
 		err = VerifyChecksum(filepath, resultversion.Checksum)
 
 		if err != nil {
-			fmt.Fprintln(os.Stderr, "Verification failed", err)
-			os.Exit(1)
+			return fmt.Errorf("Verification failed %w", err)
 		} else {
 			fmt.Println("Package verified successfully")
 		}
@@ -107,20 +103,17 @@ func UpdateNextStep(cfg config) {
 		versionpath := cfg.GetVersionPath()
 		message, err = Extractpackage(filepath, versionpath)
 		if err != nil {
-			fmt.Fprintln(os.Stderr, "Error extracting package: ", err)
-			os.Exit(1)
+			return fmt.Errorf("Error extracting package %w: ", err)
 		}
 		println(message)
 
 		// Symlink the new version to the current one
 
-		os.Exit(0)
-
 	} else {
 		fmt.Println("Installation cancelled")
 	}
 
-	os.Exit(0)
+	return nil
 }
 
 // This function gets the local version and remote project version

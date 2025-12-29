@@ -35,9 +35,19 @@ func main() {
 	// nstep commands
 	switch command {
 	case "update":
-		UpdateNextStep(cfg)
+		err := UpdateNextStep(cfg)
+		if err != nil {
+			fmt.Fprint(os.Stderr, err)
+			os.Exit(1)
+		}
 	case "rollback":
 		fmt.Println("rollbacker")
+	case "unlock":
+		err := UnlockNstep(cfg)
+		if err != nil {
+			fmt.Fprint(os.Stderr, err)
+			os.Exit(1)
+		}
 	case "help", "--help", "-h":
 		printUsage()
 		os.Exit(0)
