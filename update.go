@@ -102,7 +102,7 @@ func UpdateNextStep(cfg config) error {
 
 		// Extract the downloaded package, function from package.go
 		versionpath := cfg.GetVersionPath()
-		filename = fmt.Sprintf("nextstep_%s", resultversion.LatestVersion)
+		filename = fmt.Sprintf("nextstep_%s", resultversion.LatestVersion) // also used in currentfilepath
 		versionfilepath := fmt.Sprintf("%s/%s", versionpath, filename)
 
 		message, err = Extractpackage(downloadfilepath, versionfilepath)
@@ -112,9 +112,17 @@ func UpdateNextStep(cfg config) error {
 		println(message)
 
 		// Symlink the new version to the current one
+		err = emtyDir(cfg.GetCurrentPath())
+		if err != nil {
+			return fmt.Errorf("%w", err)
+		}
 
-		//err = os.Symlink( cfg.GetCurrentPath()) if err != nil { return
-		//fmt.Errorf("Error symlinking %w: ", err) }
+		currentfilepath := fmt.Sprintf("%s/%s", cfg.GetCurrentPath(), filename)
+
+		err = os.Symlink(versionfilepath, currentfilepath)
+		if err != nil {
+			return fmt.Errorf("Error symlinking %w", err)
+		}
 
 	} else {
 		fmt.Println("Installation cancelled")
@@ -183,4 +191,19 @@ func versionchecker(cfg config) (*versionCheck, error) {
 	}
 
 	return result, nil
+}
+
+func emtyDir(dirpath string) error {
+	entries, err := os.ReadDir(dirpath)
+	if err != nil && !os.IsNotExist(err) {
+		return fmt.Errorf("Error reading current directory %w", err)
+	}
+
+	for _, entry := range entries {
+		path := fmt.Sprintf("%s/%s", dirpath, entry.Name())
+		if err := os.RemoveAll(path); err != nil {
+			return fmt.Errorf("Error removing %s: %w", path, err)
+		}
+	}
+	return nil
 }

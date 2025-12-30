@@ -40,7 +40,8 @@ func Extractpackage(targzpath, destdir string) (message string, err error) {
 		return "", fmt.Errorf("cannot create destination directory %w\n", err)
 	}
 
-	cmd := exec.Command("tar", "-xzf", targzpath, "-C", destdir)
+	//cmd := exec.Command("tar", "-xzf", targzpath, "-C", destdir)
+	cmd := exec.Command("tar", "-xzf", targzpath, "-C", destdir, "--strip-components=1")
 	if err := cmd.Run(); err != nil {
 		return "", fmt.Errorf("cannot extract tar.gz %w\n", err)
 	}
