@@ -68,6 +68,7 @@ func UpdateNextStep(cfg config) error {
 		response == "Yes" || response == "yes" {
 		var message string
 		var err error
+		var filename string
 
 		// Nstep lock check
 		lockfile, err := LockNstep(cfg)
@@ -79,10 +80,10 @@ func UpdateNextStep(cfg config) error {
 
 		// format filepath to store download
 		downloadpath := cfg.GetDownloadPath()
-		filename := fmt.Sprintf("nextstep_%s.tar.gz", resultversion.LatestVersion)
-		filepath := fmt.Sprintf("%s/%s", downloadpath, filename)
+		filename = fmt.Sprintf("nextstep_%s.tar.gz", resultversion.LatestVersion)
+		downloadfilepath := fmt.Sprintf("%s/%s", downloadpath, filename)
 
-		message, err = Downloadpackage(resultversion.DownloadURL, filepath)
+		message, err = Downloadpackage(resultversion.DownloadURL, downloadfilepath)
 
 		if err != nil {
 			return fmt.Errorf("Error downloading package %w", err)
@@ -91,7 +92,7 @@ func UpdateNextStep(cfg config) error {
 
 		// Verifying package integrity
 
-		err = VerifyChecksum(filepath, resultversion.Checksum)
+		err = VerifyChecksum(downloadfilepath, resultversion.Checksum)
 
 		if err != nil {
 			return fmt.Errorf("Verification failed %w", err)
@@ -101,13 +102,19 @@ func UpdateNextStep(cfg config) error {
 
 		// Extract the downloaded package, function from package.go
 		versionpath := cfg.GetVersionPath()
-		message, err = Extractpackage(filepath, versionpath)
+		filename = fmt.Sprintf("nextstep_%s", resultversion.LatestVersion)
+		versionfilepath := fmt.Sprintf("%s/%s", versionpath, filename)
+
+		message, err = Extractpackage(downloadfilepath, versionfilepath)
 		if err != nil {
 			return fmt.Errorf("Error extracting package %w: ", err)
 		}
 		println(message)
 
 		// Symlink the new version to the current one
+
+		//err = os.Symlink( cfg.GetCurrentPath()) if err != nil { return
+		//fmt.Errorf("Error symlinking %w: ", err) }
 
 	} else {
 		fmt.Println("Installation cancelled")
