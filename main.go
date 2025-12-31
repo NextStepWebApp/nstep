@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	nstepconfigfile = "/home/william/Documents/programming/PWS/nstep/config.json"
+	nstepconfigfile = "/etc/nstep/config.json"
 )
 
 func main() {
