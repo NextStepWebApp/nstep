@@ -26,6 +26,7 @@ type nextStep struct {
 	Name    string `json:"name"`
 	Version string `json:"version"`
 	Remote  string `json:"remote_project"`
+	Web     string `json:"webpath"`
 }
 
 // To store information for version checker
@@ -127,6 +128,14 @@ func UpdateNextStep(cfg config) error {
 	} else {
 		fmt.Println("Installation cancelled")
 	}
+
+	return nil
+}
+
+// This function will be given the file path of the current version
+// And then it replace with the old version + db backup
+// So the db when you roleback is seprate
+func replaceUpdate(currentversion string) error {
 
 	return nil
 }
