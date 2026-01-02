@@ -34,7 +34,7 @@ func LockNstep(cfg config) (*os.File, error) {
 		if os.IsExist(err) {
 			return nil, fmt.Errorf("another update is already running\nTry again later or run 'nstep unlock' to remove a stale lock\n")
 		}
-		return nil, fmt.Errorf("failed to create lock file: %w", err)
+		return nil, fmt.Errorf("failed to create lock file %w\n", err)
 	}
 
 	return lockfile, nil
