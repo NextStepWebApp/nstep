@@ -11,8 +11,15 @@ const (
 )
 
 func main() {
-	// Load the config
+	// Load the config json
 	cfg, err := Loadconfig(nstepconfigfile)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+
+	// Load the local package json
+	plj, err := loadlocalpackage(cfg)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
@@ -34,8 +41,16 @@ func main() {
 
 	// nstep commands
 	switch command {
+
+	case "install":
+		err := InstallNextStep(plj)
+		if err != nil {
+			fmt.Fprint(os.Stderr, err)
+			os.Exit(1)
+		}
+
 	case "update":
-		err := UpdateNextStep(cfg)
+		err := UpdateNextStep(cfg, plj)
 		if err != nil {
 			fmt.Fprint(os.Stderr, err)
 			os.Exit(1)
@@ -75,6 +90,7 @@ func printUsage() {
 	fmt.Println("	nstep <command>")
 	fmt.Println()
 	fmt.Println("Commands:")
+	fmt.Println("	install      install the nextstep webapp")
 	fmt.Println("	update       Update NextStep to latest version")
 	fmt.Println("	rollback     Rollback to previous version")
 	fmt.Println("	unlock       Clear stuck update lock")

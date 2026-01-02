@@ -20,10 +20,15 @@ type nstepjson struct {
 	NstepDownloadPath string `json:"nstepdownloadpath"`
 	NstepVersionPath  string `json:"nstepversionpath"`
 	NstepCurrentPath  string `json:"nstepcurrentpath"`
+	NstepBackupPath   string `json:"nstepbackuppath"`
 	Lockfile          string `json:"lockfile"`
 }
 
 // Functions to get specific info from the json
+
+func (c config) GetBackupPath() string {
+	return c.Nstep.NstepBackupPath
+}
 
 func (c config) GetPackagePath() string {
 	return c.Packages.FilePath
@@ -49,9 +54,10 @@ func (c config) GetCurrentPath() string {
 // if not create them
 func (c config) Diravailable() error {
 	paths := []string{
-		c.Nstep.NstepDownloadPath,
-		c.Nstep.NstepVersionPath,
-		c.Nstep.NstepCurrentPath,
+		c.GetDownloadPath(),
+		c.GetVersionPath(),
+		c.GetCurrentPath(),
+		c.GetBackupPath(),
 	}
 
 	for _, path := range paths {

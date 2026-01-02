@@ -7,9 +7,9 @@ import (
 	"strings"
 )
 
-func UpdateNextStep(cfg config) error {
+func UpdateNextStep(cfg config, plj *packageLocalJson) error {
 	// function from package.go uses methods to get information
-	resultversion, err := Versionchecker(cfg)
+	resultversion, err := Versionchecker(cfg, plj)
 	if err != nil {
 		return fmt.Errorf("Error checking version %w", err)
 	}
@@ -93,9 +93,28 @@ func UpdateNextStep(cfg config) error {
 			return fmt.Errorf("Error symlinking %w", err)
 		}
 
+		// get the current code and move to web portal
+		// Update backs up the db (so db is seperate between update)
+		// New db gets updated by scripts if needed
+
 	} else {
 		fmt.Println("Installation cancelled")
 	}
+
+	return nil
+}
+
+func updatemove(resultversion *versionCheck, plj *packageLocalJson, cfg config) error {
+	var err error
+
+	// First Backup the current install
+	backfilepath := fmt.Sprintf("%s/%s", cfg.GetBackupPath(), resultversion.GetCurrentVersion())
+	err = os.Rename(plj.GetLocalWebpath(), backfilepath)
+	if err != nil {
+		return fmt.Errorf("could not move current Nextstep version to backup %w", err)
+	}
+
+	//currentversion := resultversion.GetCurrentVersion()
 
 	return nil
 }

@@ -25,10 +25,32 @@ type packageLocalJson struct {
 }
 
 type nextStep struct {
-	Name    string `json:"name"`
-	Version string `json:"version"`
-	Remote  string `json:"remote_project"`
-	Web     string `json:"webpath"`
+	Name          string `json:"name"`
+	Version       string `json:"version"`
+	Remote        string `json:"remote_project"`
+	InstallScript string `json:"install_script"`
+	Web           string `json:"webpath"`
+}
+
+// Methods for local package json calling
+
+func (plj packageLocalJson) GetRemote() string {
+	return plj.NextStep.Remote
+}
+
+func (plj packageLocalJson) GetVersion() string {
+	return plj.NextStep.Version
+}
+func (plj packageLocalJson) Getname() string {
+	return plj.NextStep.Name
+}
+
+func (plj packageLocalJson) GetLocalWebpath() string {
+	return plj.NextStep.Web
+}
+
+func (plj packageLocalJson) GetNextStepInstallScript() string {
+	return plj.NextStep.InstallScript
 }
 
 // To store information for version checker
@@ -44,56 +66,40 @@ type versionCheck struct {
 
 // Method calls for versionstuct
 
-func (vc *versionCheck) GetCurrentVersion() string {
+func (vc versionCheck) GetCurrentVersion() string {
 	return vc.CurrentVersion
 }
 
-func (vc *versionCheck) GetLatestVersion() string {
+func (vc versionCheck) GetLatestVersion() string {
 	return vc.LatestVersion
 }
 
-func (vc *versionCheck) IsUpdateAvailable() bool {
+func (vc versionCheck) IsUpdateAvailable() bool {
 	return vc.UpdateAvailable
 }
 
-func (vc *versionCheck) GetMessage() string {
+func (vc versionCheck) GetMessage() string {
 	return vc.Message
 }
 
-func (vc *versionCheck) GetDownloadURL() string {
+func (vc versionCheck) GetDownloadURL() string {
 	return vc.DownloadURL
 }
 
-func (vc *versionCheck) GetReleaseNotes() string {
+func (vc versionCheck) GetReleaseNotes() string {
 	return vc.ReleaseNotes
 }
 
-func (vc *versionCheck) GetChecksum() string {
+func (vc versionCheck) GetChecksum() string {
 	return vc.Checksum
 }
 
 // This function gets the local version and remote project version
 // And then compares them to see if a new version came out
-func Versionchecker(cfg config) (*versionCheck, error) {
-	// Get local version
-
-	packagepath := cfg.GetPackagePath()
-
-	jsonLocalFile, err := os.Open(packagepath)
-	if err != nil {
-		return nil, fmt.Errorf("cannot open package.json: %w", err)
-	}
-	defer jsonLocalFile.Close()
-
-	packageLocalItem := packageLocalJson{}
-	decoder := json.NewDecoder(jsonLocalFile)
-	decoder.DisallowUnknownFields()
-	if err := decoder.Decode(&packageLocalItem); err != nil {
-		return nil, fmt.Errorf("cannot decode local package.json: %w", err)
-	}
-
+func Versionchecker(cfg config, plj *packageLocalJson) (*versionCheck, error) {
+	// The local package json is loaded in main by loadlocal package function in this file
 	// Get the url to see the version of the project
-	remotePackageUrl := packageLocalItem.NextStep.Remote
+	remotePackageUrl := plj.GetRemote()
 	response, err := http.Get(remotePackageUrl)
 	if err != nil {
 		return nil, fmt.Errorf("cannot fetch remote version: %w", err)
@@ -105,12 +111,12 @@ func Versionchecker(cfg config) (*versionCheck, error) {
 	}
 
 	packageOnlineItem := packageOnlineJson{}
-	decoder = json.NewDecoder(response.Body)
+	decoder := json.NewDecoder(response.Body)
 	if err := decoder.Decode(&packageOnlineItem); err != nil {
 		return nil, fmt.Errorf("cannot decode remote package.json: %w", err)
 	}
 
-	localVersion := packageLocalItem.NextStep.Version
+	localVersion := plj.GetVersion()
 	onlineVersion := packageOnlineItem.Version
 
 	// Create result struct
@@ -132,6 +138,24 @@ func Versionchecker(cfg config) (*versionCheck, error) {
 	}
 
 	return result, nil
+}
+
+func loadlocalpackage(cfg config) (*packageLocalJson, error) {
+	packagepath := cfg.GetPackagePath()
+
+	jsonLocalFile, err := os.Open(packagepath)
+	if err != nil {
+		return nil, fmt.Errorf("cannot open package.json: %w", err)
+	}
+	defer jsonLocalFile.Close()
+
+	packageLocalItem := &packageLocalJson{}
+	decoder := json.NewDecoder(jsonLocalFile)
+	decoder.DisallowUnknownFields()
+	if err := decoder.Decode(packageLocalItem); err != nil {
+		return nil, fmt.Errorf("cannot decode local package.json: %w", err)
+	}
+	return packageLocalItem, nil
 }
 
 func Downloadpackage(url, filepath string) (message string, err error) {
