@@ -9,7 +9,7 @@ func InstallNextStep(plj *packageLocalJson) error {
 
 	installScript := plj.GetNextStepInstallScript()
 
-	cmd := exec.Command("./", installScript)
+	cmd := exec.Command("bash", installScript)
 
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("error executing nextstep install script %w\n", err)
