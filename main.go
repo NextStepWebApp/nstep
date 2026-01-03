@@ -11,6 +11,13 @@ const (
 )
 
 func main() {
+
+	// Check if running as root
+	if os.Geteuid() != 0 {
+		fmt.Println("This program must be run as root (use sudo)")
+		os.Exit(1)
+	}
+
 	// Load the config json
 	cfg, err := Loadconfig(nstepconfigfile)
 	if err != nil {
