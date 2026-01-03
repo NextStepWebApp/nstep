@@ -13,7 +13,6 @@ installpackage() {
     done
 }
 
-clear
 echo -ne "
 -------------------------------------------------------------------------
                         NextStep Web App Setup
@@ -68,7 +67,8 @@ fi
 
 systemctl enable php-fpm.service 2>/dev/null || true
 
-# Enable SQLite extension if grep -q "^;extension=sqlite3" /etc/php/php.ini; then
+# Enable SQLite extension
+if grep -q "^;extension=sqlite3" /etc/php/php.ini; then
     echo "Enabling SQLite extension..."
     sed -i 's/^;extension=sqlite3/extension=sqlite3/' /etc/php/php.ini
 elif grep -q "^extension=sqlite3" /etc/php/php.ini; then
