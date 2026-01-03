@@ -1,14 +1,16 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"os"
 	"os/exec"
 	"os/user"
 	"strconv"
 )
 
-func InstallNextStep(plj *packageLocalJson) error {
+func InstallNextStep(plj *packageLocalJson, cfg config) error {
 	var err error
 	// Run the setup_nextstep.sh script
 	// This is for manipulating files and starting services
@@ -43,6 +45,60 @@ func InstallNextStep(plj *packageLocalJson) error {
 			return fmt.Errorf("cannot create directory %s %w\n", dir, err)
 		}
 	}
+
+	// Download and place the Nextstep code correctly
+
+	lockfile, err := LockNstep(cfg)
+	if err != nil {
+		return fmt.Errorf("Error update.lock %w", err)
+	}
+	defer lockfile.Close()
+	defer os.Remove(cfg.GetLockFilePath())
+
+	fmt.Println("Fetching latest version information...")
+	remotePackageUrl := plj.GetRemote()
+	response, err := http.Get(remotePackageUrl)
+	if err != nil {
+		return fmt.Errorf("cannot fetch remote version: %w", err)
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode != http.StatusOK {
+		return fmt.Errorf("remote server returned status: %d", response.StatusCode)
+	}
+
+	packageOnlineItem := packageOnlineJson{}
+	decoder := json.NewDecoder(response.Body)
+	if err := decoder.Decode(&packageOnlineItem); err != nil {
+		return fmt.Errorf("cannot decode remote package.json: %w", err)
+	}
+
+	fmt.Printf("Latest version: %s\n", packageOnlineItem.Version)
+	// Download the package
+	downloadpath := cfg.GetDownloadPath()
+	filename := fmt.Sprintf("nextstep_%s.tar.gz", packageOnlineItem.Version)
+	downloadfilepath := fmt.Sprintf("%s/%s", downloadpath, filename)
+
+	fmt.Printf("Downloading %s...\n", packageOnlineItem.Version)
+	message, err := Downloadpackage(packageOnlineItem.Url, downloadfilepath)
+	if err != nil {
+		return fmt.Errorf("Error downloading package %w", err)
+	}
+	println(message)
+
+	// Verify package integrity
+	fmt.Println("Verifying package integrity...")
+	err = VerifyChecksum(downloadfilepath, packageOnlineItem.Checksum)
+	if err != nil {
+		return fmt.Errorf("Verification failed %w", err)
+	}
+	fmt.Println("Package verified successfully") // Extract to web path
+	webpath := plj.GetLocalWebpath()
+	message, err = Extractpackage(downloadfilepath, webpath)
+	if err != nil {
+		return fmt.Errorf("Error extracting package %w", err)
+	}
+	println(message)
 
 	// Move all the files to there places
 

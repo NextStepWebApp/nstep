@@ -43,7 +43,7 @@ func main() {
 	switch command {
 
 	case "install":
-		err := InstallNextStep(plj)
+		err := InstallNextStep(plj, cfg)
 		if err != nil {
 			fmt.Fprint(os.Stderr, err)
 			os.Exit(1)
