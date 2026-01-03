@@ -4,6 +4,11 @@
     "version": "v0.0.0",
     "remote_project": "https://raw.githubusercontent.com/NextStepWebApp/NextStep/refs/heads/main/version.json",
     "install_script": "/opt/nstep/setup_nextstep.sh",
-    "webpath": "/srv/http/NextStep"
+    "webpath": "/srv/http/NextStep",
+    "required_dirs": [
+      "/var/lib/nextstepwebapp",
+      "/opt/nextstepwebapp",
+      "/etc/nextstepwebapp"
+    ]
   }
 }

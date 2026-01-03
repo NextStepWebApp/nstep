@@ -25,14 +25,19 @@ type packageLocalJson struct {
 }
 
 type nextStep struct {
-	Name          string `json:"name"`
-	Version       string `json:"version"`
-	Remote        string `json:"remote_project"`
-	InstallScript string `json:"install_script"`
-	Web           string `json:"webpath"`
+	Name          string   `json:"name"`
+	Version       string   `json:"version"`
+	Remote        string   `json:"remote_project"`
+	InstallScript string   `json:"install_script"`
+	Web           string   `json:"webpath"`
+	RequiredDirs  []string `json:"required_dirs"`
 }
 
 // Methods for local package json calling
+
+func (plj packageLocalJson) GetRequiredDirs() []string {
+	return plj.NextStep.RequiredDirs
+}
 
 func (plj packageLocalJson) GetRemote() string {
 	return plj.NextStep.Remote
