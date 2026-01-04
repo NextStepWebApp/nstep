@@ -86,6 +86,8 @@ func InstallNextStep(plj *packageLocalJson, cfg config) error {
 		fmt.Printf("Removed: %s\n", dir)
 	}
 
+	// Make hiddenfiles to say that the install is done
+
 	fmt.Println("Nextstep installation completed successfully!")
 
 	return nil

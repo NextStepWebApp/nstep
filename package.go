@@ -164,6 +164,21 @@ func NextStepSetup(cfg config, resultversion *versionCheck) error {
 	return nil
 }
 
+func updatemove(resultversion *versionCheck, plj *packageLocalJson, cfg config) error {
+	var err error
+
+	// First Backup the current install
+	backfilepath := fmt.Sprintf("%s/%s", cfg.GetBackupPath(), resultversion.GetCurrentVersion())
+	err = os.Rename(plj.GetLocalWebpath(), backfilepath)
+	if err != nil {
+		return fmt.Errorf("could not move current Nextstep version to backup %w", err)
+	}
+
+	//currentversion := resultversion.GetCurrentVersion()
+
+	return nil
+}
+
 // This function gets the local version and remote project version
 // And then compares them to see if a new version came out
 func Versionchecker(cfg config, plj *packageLocalJson) (*versionCheck, error) {
