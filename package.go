@@ -99,6 +99,71 @@ func (vc versionCheck) GetChecksum() string {
 	return vc.Checksum
 }
 
+func NextStepSetup(cfg config, resultversion *versionCheck) error {
+	var message string
+	var err error
+	var filename string
+
+	// Nstep lock check
+	lockfile, err := LockNstep(cfg)
+	if err != nil {
+		return fmt.Errorf("Error update.lock %w", err)
+	}
+	defer lockfile.Close()
+	defer os.Remove(cfg.GetLockFilePath())
+
+	// format filepath to store download
+	downloadpath := cfg.GetDownloadPath()
+	filename = fmt.Sprintf("nextstep_%s.tar.gz", resultversion.GetLatestVersion())
+	downloadfilepath := fmt.Sprintf("%s/%s", downloadpath, filename)
+
+	message, err = Downloadpackage(resultversion.GetDownloadURL(), downloadfilepath)
+
+	if err != nil {
+		return fmt.Errorf("Error downloading package %w", err)
+	}
+	println(message)
+
+	// Verifying package integrity
+
+	err = VerifyChecksum(downloadfilepath, resultversion.GetChecksum())
+
+	if err != nil {
+		return fmt.Errorf("Verification failed %w", err)
+	} else {
+		fmt.Println("Package verified successfully")
+	}
+
+	// Extract the downloaded package, function from package.go
+	versionpath := cfg.GetVersionPath()
+	filename = fmt.Sprintf("nextstep_%s", resultversion.LatestVersion) // also used in currentfilepath
+	versionfilepath := fmt.Sprintf("%s/%s", versionpath, filename)
+
+	message, err = Extractpackage(downloadfilepath, versionfilepath)
+	if err != nil {
+		return fmt.Errorf("Error extracting package %w: ", err)
+	}
+	println(message)
+
+	// Symlink the new version to the current one
+	err = EmtyDir(cfg.GetCurrentPath())
+	if err != nil {
+		return fmt.Errorf("%w", err)
+	}
+
+	currentfilepath := fmt.Sprintf("%s/%s", cfg.GetCurrentPath(), filename)
+
+	err = os.Symlink(versionfilepath, currentfilepath)
+	if err != nil {
+		return fmt.Errorf("Error symlinking %w", err)
+	}
+
+	// get the current code and move to web portal
+	// Update backs up the db (so db is seperate between update)
+	// New db gets updated by scripts if needed
+	return nil
+}
+
 // This function gets the local version and remote project version
 // And then compares them to see if a new version came out
 func Versionchecker(cfg config, plj *packageLocalJson) (*versionCheck, error) {
