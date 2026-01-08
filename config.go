@@ -56,8 +56,8 @@ func (c config) Diravailable() error {
 	paths := []string{
 		c.GetDownloadPath(),
 		c.GetVersionPath(),
-		c.GetCurrentPath(),
 		c.GetBackupPath(),
+		c.GetCurrentPath(),
 	}
 
 	for _, path := range paths {
