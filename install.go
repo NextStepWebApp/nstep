@@ -48,7 +48,7 @@ func InstallNextStep(plj *packageLocalJson, cfg config) error {
 
 	// The same process as in update.go but the local version is just v0.0.0
 	resultversion, err := Versionchecker(cfg, plj)
-	err = NextStepSetup(cfg, resultversion)
+	err = NextStepSetup(cfg, resultversion, plj)
 
 	// Move all the files to there places
 
