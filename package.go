@@ -99,7 +99,7 @@ func (vc versionCheck) GetChecksum() string {
 	return vc.Checksum
 }
 
-func NextStepSetup(cfg config, resultversion *versionCheck) error {
+func NextStepSetup(cfg config, resultversion *versionCheck, plj *packageLocalJson) error {
 	var message string
 	var err error
 	var filename string
@@ -158,6 +158,32 @@ func NextStepSetup(cfg config, resultversion *versionCheck) error {
 		return fmt.Errorf("Error symlinking %w", err)
 	}
 
+	// Safty check to see if this is a install or update
+	var setupStatus string
+	optionsSetup := []string{"update", "install"}
+	_, err = os.ReadDir(plj.GetLocalWebpath())
+
+	if err != nil {
+		if os.IsExist(err) {
+			// This is a install
+			setupStatus = optionsSetup[1]
+		}
+	} else {
+		// This is a update
+		setupStatus = optionsSetup[0]
+
+	}
+
+	switch setupStatus {
+	case optionsSetup[0]: // update
+		// backup the current nextstep installation
+
+	case optionsSetup[1]: // install
+	default:
+		return fmt.Errorf("no option setup")
+	}
+
+	//err = updatemove(resultversion, plj, cfg)
 	// get the current code and move to web portal
 	// Update backs up the db (so db is seperate between update)
 	// New db gets updated by scripts if needed

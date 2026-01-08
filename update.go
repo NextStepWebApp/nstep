@@ -36,7 +36,7 @@ func UpdateNextStep(cfg config, plj *packageLocalJson) error {
 	if response == "Y" || response == "y" || response == "" ||
 		response == "Yes" || response == "yes" {
 
-		err := NextStepSetup(cfg, resultversion)
+		err := NextStepSetup(cfg, resultversion, plj)
 		if err != nil {
 			return fmt.Errorf("%w", err)
 		}
@@ -44,21 +44,6 @@ func UpdateNextStep(cfg config, plj *packageLocalJson) error {
 	} else {
 		fmt.Println("Installation cancelled")
 	}
-
-	return nil
-}
-
-func updatemove(resultversion *versionCheck, plj *packageLocalJson, cfg config) error {
-	var err error
-
-	// First Backup the current install
-	backfilepath := fmt.Sprintf("%s/%s", cfg.GetBackupPath(), resultversion.GetCurrentVersion())
-	err = os.Rename(plj.GetLocalWebpath(), backfilepath)
-	if err != nil {
-		return fmt.Errorf("could not move current Nextstep version to backup %w", err)
-	}
-
-	//currentversion := resultversion.GetCurrentVersion()
 
 	return nil
 }
