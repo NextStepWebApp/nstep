@@ -11,12 +11,7 @@ const (
 )
 
 func main() {
-
-	// Check if running as root
-	if os.Geteuid() != 0 {
-		fmt.Println("This program must be run as root (use sudo)")
-		os.Exit(1)
-	}
+	var err error
 
 	// Load the config json
 	cfg, err := Loadconfig(nstepconfigfile)
@@ -36,7 +31,8 @@ func main() {
 	err = cfg.Diravailable()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "Error creating filepath", err)
-		os.Exit(1)
+		SudoPowerChecker()
+		PowerHandler(err)
 	}
 
 	// Get the command and error handling
@@ -50,22 +46,39 @@ func main() {
 	switch command {
 
 	case "install":
-		err := InstallNextStep(plj, cfg)
+		// Check if running as root
+		err = SudoPowerChecker()
+		PowerHandler(err)
+
+		err = InstallNextStep(plj, cfg)
 		if err != nil {
 			fmt.Fprint(os.Stderr, err)
 			os.Exit(1)
 		}
 
 	case "update":
-		err := UpdateNextStep(cfg, plj)
+		// Check if running as root
+		err = SudoPowerChecker()
+		PowerHandler(err)
+
+		err = UpdateNextStep(cfg, plj)
 		if err != nil {
 			fmt.Fprint(os.Stderr, err)
 			os.Exit(1)
 		}
 	case "rollback":
+		// Check if running as root
+		err = SudoPowerChecker()
+		PowerHandler(err)
+
 		fmt.Println("rollbacker")
 	case "unlock":
-		err := UnlockNstep(cfg)
+
+		// Check if running as root
+		err = SudoPowerChecker()
+		PowerHandler(err)
+
+		err = UnlockNstep(cfg)
 		if err != nil {
 			fmt.Fprint(os.Stderr, err)
 			os.Exit(1)

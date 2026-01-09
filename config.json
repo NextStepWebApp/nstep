@@ -1,12 +1,12 @@
 {
   "packages": {
-    "file_path": "/etc/nstep/packages.json"
+    "file_path": "/etc/nstep/package.json"
   },
   "nstep": {
     "nstepdownloadpath": "/var/lib/nstep/downloads",
     "nstepversionpath": "/var/lib/nstep/versions",
     "nstepcurrentpath": "/var/lib/nstep/current",
-    "nstepbackuppath": "var/lib/nstep/backup",
+    "nstepbackuppath": "/var/lib/nstep/backup",
     "lockfile": "/var/lib/nstep/nstep.lock"
   }
 }

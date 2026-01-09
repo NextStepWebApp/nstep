@@ -177,8 +177,10 @@ func NextStepSetup(cfg config, resultversion *versionCheck, plj *packageLocalJso
 	switch setupStatus {
 	case optionsSetup[0]: // update
 		// backup the current nextstep installation
+		fmt.Println("This is a update")
 
 	case optionsSetup[1]: // install
+		fmt.Println("This is a install")
 	default:
 		return fmt.Errorf("no option setup")
 	}
@@ -256,7 +258,7 @@ func loadlocalpackage(cfg config) (*packageLocalJson, error) {
 
 	jsonLocalFile, err := os.Open(packagepath)
 	if err != nil {
-		return nil, fmt.Errorf("cannot open package.json: %w", err)
+		return nil, fmt.Errorf("cannot open package.json %w", err)
 	}
 	defer jsonLocalFile.Close()
 

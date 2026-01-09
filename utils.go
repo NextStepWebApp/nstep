@@ -19,3 +19,18 @@ func EmtyDir(dirpath string) error {
 	}
 	return nil
 }
+
+func SudoPowerChecker() error {
+	if os.Geteuid() != 0 {
+		return fmt.Errorf("this command must be run as root (use sudo)")
+	}
+	return nil
+}
+
+func PowerHandler(err error) {
+	err = SudoPowerChecker()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+}

@@ -74,7 +74,7 @@ func Loadconfig(nstepconfigfile string) (config, error) {
 
 	configfile, err := os.Open(nstepconfigfile)
 	if err != nil {
-		return config{}, errors.New("Cannot open the package.json file")
+		return config{}, errors.New("Cannot load the config.json file")
 	}
 	defer configfile.Close()
 
