@@ -126,7 +126,7 @@ func NextStepSetup(cfg config, resultversion *versionCheck, plj *packageLocalJso
 
 	// Verifying package integrity
 
-	err = VerifyChecksum(downloadfilepath, resultversion.GetChecksum())
+	err = verifyChecksum(downloadfilepath, resultversion.GetChecksum())
 
 	if err != nil {
 		return fmt.Errorf("Verification failed %w", err)
@@ -139,7 +139,7 @@ func NextStepSetup(cfg config, resultversion *versionCheck, plj *packageLocalJso
 	filename = fmt.Sprintf("nextstep_%s", resultversion.LatestVersion) // also used in currentfilepath
 	versionfilepath := fmt.Sprintf("%s/%s", versionpath, filename)
 
-	message, err = Extractpackage(downloadfilepath, versionfilepath)
+	message, err = extractpackage(downloadfilepath, versionfilepath)
 	if err != nil {
 		return fmt.Errorf("Error extracting package %w: ", err)
 	}
@@ -159,51 +159,79 @@ func NextStepSetup(cfg config, resultversion *versionCheck, plj *packageLocalJso
 	}
 
 	// Safty check to see if this is a install or update
-	var setupStatus string
-	optionsSetup := []string{"update", "install"}
+	setupStatus := false
 	_, err = os.ReadDir(plj.GetLocalWebpath())
 
 	if err != nil {
 		if os.IsExist(err) {
-			// This is a install
-			setupStatus = optionsSetup[1]
+			// This is a update
+			setupStatus = true
 		}
-	} else {
-		// This is a update
-		setupStatus = optionsSetup[0]
+	}
+
+	if setupStatus == true {
+		var err error
+		var name string
+
+		// run the extra update stuff: bakup the nstep instance
+		dirs := plj.GetRequiredDirs()
+
+		for _, dir := range dirs {
+			// make the dir name
+			name = fmt.Sprintf("%s/%s", cfg.GetBackupPath(), dir)
+			err = os.Rename(dir, name)
+			if err != nil {
+				return fmt.Errorf("cannot backup %s %w", dir, err)
+			}
+		}
+		// Now need to move the web app source code itself
+		name = fmt.Sprintf("%s/%s", cfg.GetBackupPath(), plj.GetLocalWebpath())
+		err = os.Rename(plj.GetLocalWebpath(), name)
+
+		// Now compress it to a compressed file (.tar.gz)
+		fmt.Println("Compress part")
 
 	}
 
-	switch setupStatus {
-	case optionsSetup[0]: // update
-		// backup the current nextstep installation
-		fmt.Println("This is a update")
+	// Move all the files to there places
+	moves := [][2]string{
+		{"/srv/http/NextStep/config/nextstep_config.json", "/etc/nextstepwebapp/nextstep_config.json"},
+		{"/srv/http/NextStep/config/branding.json", "/var/lib/nextstepwebapp/branding.json"},
+		{"/srv/http/NextStep/config/config.json", "/var/lib/nextstepwebapp/config.json"},
+		{"/srv/http/NextStep/config/theme.json", "/var/lib/nextstepwebapp/theme.json"},
+		{"/srv/http/NextStep/config/errors.json", "/var/lib/nextstepwebapp/errors.json"},
+		{"/srv/http/NextStep/config/setup.json", "/var/lib/nextstepwebapp/setup.json"},
+		{"/srv/http/NextStep/data/import.py", "/opt/nextstepwebapp/import.py"},
+	}
 
-	case optionsSetup[1]: // install
-		fmt.Println("This is a install")
-	default:
-		return fmt.Errorf("no option setup")
+	// Execute all moves
+	for _, move := range moves {
+		err := moveFile(move[0], move[1])
+		if err != nil {
+			return fmt.Errorf("Error moving file %w\n", err)
+		}
+		fmt.Printf("Moved: %s -> %s\n", move[0], move[1])
+	}
+
+	// Remove some dirs
+	dirsToRemove := []string{
+		"/srv/http/NextStep/config",
+		"/srv/http/NextStep/data",
+	}
+
+	// Remove directories
+	for _, dir := range dirsToRemove {
+		err := removeDir(dir)
+		if err != nil {
+			return fmt.Errorf("Error removing directory %s %w", dir, err)
+		}
+		fmt.Printf("Removed: %s\n", dir)
 	}
 
 	//err = updatemove(resultversion, plj, cfg)
 	// get the current code and move to web portal
 	// Update backs up the db (so db is seperate between update)
 	// New db gets updated by scripts if needed
-	return nil
-}
-
-func updatemove(resultversion *versionCheck, plj *packageLocalJson, cfg config) error {
-	var err error
-
-	// First Backup the current install
-	backfilepath := fmt.Sprintf("%s/%s", cfg.GetBackupPath(), resultversion.GetCurrentVersion())
-	err = os.Rename(plj.GetLocalWebpath(), backfilepath)
-	if err != nil {
-		return fmt.Errorf("could not move current Nextstep version to backup %w", err)
-	}
-
-	//currentversion := resultversion.GetCurrentVersion()
-
 	return nil
 }
 
@@ -296,7 +324,7 @@ func Downloadpackage(url, filepath string) (message string, err error) {
 	return "Download completed successfully", nil
 }
 
-func Extractpackage(targzpath, destdir string) (message string, err error) {
+func extractpackage(targzpath, destdir string) (message string, err error) {
 	if err := os.MkdirAll(destdir, 0755); err != nil {
 		return "", fmt.Errorf("cannot create destination directory %w\n", err)
 	}
@@ -311,7 +339,7 @@ func Extractpackage(targzpath, destdir string) (message string, err error) {
 
 // VerifyChecksum calculates the SHA256 checksum of a file
 // and compares it with the expected checksum
-func VerifyChecksum(filepathdownload, expectedChecksum string) error {
+func verifyChecksum(filepathdownload, expectedChecksum string) error {
 	//expectedChecksum is from the online json
 	file, err := os.Open(filepathdownload)
 	if err != nil {

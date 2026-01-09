@@ -50,42 +50,6 @@ func InstallNextStep(plj *packageLocalJson, cfg config) error {
 	resultversion, err := Versionchecker(cfg, plj)
 	err = NextStepSetup(cfg, resultversion, plj)
 
-	// Move all the files to there places
-
-	moves := [][2]string{
-		{"/srv/http/NextStep/config/nextstep_config.json", "/etc/nextstepwebapp/nextstep_config.json"},
-		{"/srv/http/NextStep/config/branding.json", "/var/lib/nextstepwebapp/branding.json"},
-		{"/srv/http/NextStep/config/config.json", "/var/lib/nextstepwebapp/config.json"},
-		{"/srv/http/NextStep/config/theme.json", "/var/lib/nextstepwebapp/theme.json"},
-		{"/srv/http/NextStep/config/errors.json", "/var/lib/nextstepwebapp/errors.json"},
-		{"/srv/http/NextStep/config/setup.json", "/var/lib/nextstepwebapp/setup.json"},
-		{"/srv/http/NextStep/data/import.py", "/opt/nextstepwebapp/import.py"},
-	}
-
-	// Execute all moves
-	for _, move := range moves {
-		err := moveFile(move[0], move[1])
-		if err != nil {
-			return fmt.Errorf("Error moving file %w\n", err)
-		}
-		fmt.Printf("Moved: %s -> %s\n", move[0], move[1])
-	}
-
-	// Remove some dirs
-	dirsToRemove := []string{
-		"/srv/http/NextStep/config",
-		"/srv/http/NextStep/data",
-	}
-
-	// Remove directories
-	for _, dir := range dirsToRemove {
-		err := removeDir(dir)
-		if err != nil {
-			return fmt.Errorf("Error removing directory %s %w", dir, err)
-		}
-		fmt.Printf("Removed: %s\n", dir)
-	}
-
 	// Make hiddenfiles to say that the install is done
 
 	fmt.Println("Nextstep installation completed successfully!")
