@@ -161,14 +161,15 @@ func NextStepSetup(cfg config, resultversion *versionCheck, plj *packageLocalJso
 	// Safty check to see if this is a install or update
 	setupStatus := false
 	_, err = os.ReadDir(plj.GetLocalWebpath())
-
 	if err != nil {
-		if os.IsExist(err) {
-			// This is a update
-			setupStatus = true
+		if os.IsNotExist(err) {
+			setupStatus = false
+		} else {
+			return fmt.Errorf("cannot check installation status: %w", err)
 		}
+	} else {
+		setupStatus = true
 	}
-
 	if setupStatus == true {
 		var err error
 		var name string
