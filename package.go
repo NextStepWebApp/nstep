@@ -158,6 +158,7 @@ func NextStepSetup(cfg config, resultversion *versionCheck, plj *packageLocalJso
 		return fmt.Errorf("Error symlinking %w", err)
 	}
 
+	fmt.Println("debug check")
 	// Safty check to see if this is a install or update
 	setupStatus := false
 	_, err = os.ReadDir(plj.GetLocalWebpath())
