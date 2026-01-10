@@ -57,24 +57,6 @@ func InstallNextStep(plj *packageLocalJson, cfg config) error {
 	return nil
 }
 
-// a function that moves a file from old path to new path
-func moveFile(oldPath, newPath string) error {
-	err := os.Rename(oldPath, newPath)
-	if err != nil {
-		return fmt.Errorf("failed to move %s to %s: %w", oldPath, newPath, err)
-	}
-	return nil
-}
-
-// function that removes a directory
-func removeDir(path string) error {
-	err := os.RemoveAll(path)
-	if err != nil {
-		return fmt.Errorf("failed to remove directory %s: %w", path, err)
-	}
-	return nil
-}
-
 // This function gets the uid, gid from the group you give it
 // Usefull to use with chown
 func getUidGid(group string) (uid int, gid int, err error) {

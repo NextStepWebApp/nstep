@@ -206,7 +206,7 @@ func NextStepSetup(cfg config, resultversion *versionCheck, plj *packageLocalJso
 
 	// Execute all moves
 	for _, move := range moves {
-		err := moveFile(move[0], move[1])
+		err := MoveFile(move[0], move[1])
 		if err != nil {
 			return fmt.Errorf("Error moving file %w\n", err)
 		}
@@ -221,7 +221,7 @@ func NextStepSetup(cfg config, resultversion *versionCheck, plj *packageLocalJso
 
 	// Remove directories
 	for _, dir := range dirsToRemove {
-		err := removeDir(dir)
+		err := RemoveDir(dir)
 		if err != nil {
 			return fmt.Errorf("Error removing directory %s %w", dir, err)
 		}

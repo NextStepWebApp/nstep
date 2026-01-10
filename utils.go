@@ -34,3 +34,21 @@ func PowerHandler(err error) {
 		os.Exit(1)
 	}
 }
+
+// a function that moves a file from old path to new path
+func MoveFile(oldPath, newPath string) error {
+	err := os.Rename(oldPath, newPath)
+	if err != nil {
+		return fmt.Errorf("failed to move %s to %s: %w", oldPath, newPath, err)
+	}
+	return nil
+}
+
+// function that removes a directory
+func RemoveDir(path string) error {
+	err := os.RemoveAll(path)
+	if err != nil {
+		return fmt.Errorf("failed to remove directory %s: %w", path, err)
+	}
+	return nil
+}
