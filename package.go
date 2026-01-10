@@ -158,7 +158,6 @@ func NextStepSetup(cfg config, resultversion *versionCheck, plj *packageLocalJso
 		return fmt.Errorf("Error symlinking %w", err)
 	}
 
-	fmt.Println("debug check")
 	// Safty check to see if this is a install or update
 	setupStatus := false
 	_, err = os.ReadDir(plj.GetLocalWebpath())
@@ -177,8 +176,9 @@ func NextStepSetup(cfg config, resultversion *versionCheck, plj *packageLocalJso
 		// run the extra update stuff: bakup the nstep instance
 		dirs := plj.GetRequiredDirs()
 
-		for _, dir := range dirs {
+		for i, dir := range dirs {
 			// make the dir name
+			fmt.Println(i)
 			name = fmt.Sprintf("%s/%s", cfg.GetBackupPath(), dir)
 			err = os.Rename(dir, name)
 			if err != nil {
