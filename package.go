@@ -180,7 +180,7 @@ func NextStepSetup(cfg config, resultversion *versionCheck, plj *packageLocalJso
 		for i, dir := range dirs {
 			// make the dir name
 			fmt.Println(i)
-			name = fmt.Sprintf("%s/%s", cfg.GetBackupPath(), dir)
+			name = fmt.Sprintf("%s%s", cfg.GetBackupPath(), dir)
 			err = os.Rename(dir, name)
 			if err != nil {
 				return fmt.Errorf("cannot backup %s %w", dir, err)
