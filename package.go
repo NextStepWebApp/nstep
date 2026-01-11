@@ -206,12 +206,9 @@ func NextStepSetup(cfg config, resultversion *versionCheck, plj *packageLocalJso
 
 	}
 
+	fmt.Println("starts copy stuff")
 	// get the current version to the web portal
-
-	cmd := exec.Command("cp", "-r", currentfilepath, plj.GetLocalWebpath())
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("cannot copy to web portal: %w", err)
-	}
+	err = CopyDir(currentfilepath, plj.GetLocalWebpath())
 
 	// Move all the files to there places
 	moves := [][2]string{

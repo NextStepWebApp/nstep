@@ -5,6 +5,23 @@ import (
 	"os"
 )
 
+func CopyDir(reader, writer string) error {
+	var err error
+
+	dircontents, err := os.ReadDir(reader)
+	if err != nil {
+		return fmt.Errorf("cannot read the contents of %s %w\n", reader, err)
+	}
+
+	// Loop to copy all the contents over
+
+	for _, dircontent := range dircontents {
+		fmt.Println(dircontent)
+	}
+
+	return nil
+}
+
 func EmtyDir(dirpath string) error {
 	entries, err := os.ReadDir(dirpath)
 	if err != nil && !os.IsNotExist(err) {
