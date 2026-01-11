@@ -95,6 +95,7 @@ func NextStepSetup(cfg config, resultversion *versionCheck, plj *packageLocalJso
 	case setupStatus == false && commandStatus == "install":
 		fmt.Println("Installation setup...")
 
+	// Alreaddy installed
 	case setupStatus == true && commandStatus == "install":
 		return fmt.Errorf("NextStep is already installed, run 'sudo nstep update'")
 
