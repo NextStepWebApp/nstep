@@ -2,24 +2,56 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"os"
 )
 
-func CopyDir(reader, writer string) error {
-	var err error
-
-	dircontents, err := os.ReadDir(reader)
-	if err != nil {
-		return fmt.Errorf("cannot read the contents of %s %w\n", reader, err)
+func CopyDir(src, dst string) error {
+	if err := os.MkdirAll(dst, 0755); err != nil {
+		return fmt.Errorf("cannot create destination directory: %w", err)
 	}
 
-	// Loop to copy all the contents over
+	entries, err := os.ReadDir(src)
+	if err != nil {
+		return fmt.Errorf("cannot read directory %s: %w", src, err)
+	}
 
-	for _, dircontent := range dircontents {
-		fmt.Println(dircontent)
+	for _, entry := range entries {
+		srcPath := fmt.Sprintf("%s/%s", src, entry.Name())
+		dstPath := fmt.Sprintf("%s/%s", dst, entry.Name())
+
+		if entry.IsDir() {
+			// Recursively copy subdirectory
+			if err := CopyDir(srcPath, dstPath); err != nil {
+				return err
+			}
+		} else {
+			// Copy file
+			if err := CopyFile(srcPath, dstPath); err != nil {
+				return err
+			}
+		}
 	}
 
 	return nil
+}
+
+func CopyFile(src, dst string) error {
+	srcFile, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer srcFile.Close()
+
+	// Create destination file
+	dstFile, err := os.Create(dst)
+	if err != nil {
+		return err
+	}
+	defer dstFile.Close()
+
+	_, err = io.Copy(dstFile, srcFile)
+	return err
 }
 
 func EmtyDir(dirpath string) error {
