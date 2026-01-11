@@ -81,7 +81,7 @@ func main() {
 		err = SudoPowerChecker()
 		PowerHandler(err)
 
-		err = InstallNextStep(plj, cfg)
+		err = InstallNextStep(plj, cfg, status)
 		if err != nil {
 			fmt.Fprint(os.Stderr, err)
 			os.Exit(1)
@@ -94,7 +94,7 @@ func main() {
 		err = SudoPowerChecker()
 		PowerHandler(err)
 
-		err = UpdateNextStep(cfg, plj)
+		err = UpdateNextStep(cfg, plj, status)
 		if err != nil {
 			fmt.Fprint(os.Stderr, err)
 			os.Exit(1)

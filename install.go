@@ -6,7 +6,7 @@ import (
 	"os/exec"
 )
 
-func InstallNextStep(plj *packageLocalJson, cfg config) error {
+func InstallNextStep(plj *packageLocalJson, cfg config, status *Status) error {
 	var err error
 	// Run the setup_nextstep.sh script
 	// This is for manipulating files and starting services
@@ -46,7 +46,7 @@ func InstallNextStep(plj *packageLocalJson, cfg config) error {
 
 	// The same process as in update.go but the local version is just v0.0.0
 	resultversion, err := Versionchecker(cfg, plj)
-	err = NextStepSetup(cfg, resultversion, plj)
+	err = NextStepSetup(cfg, resultversion, plj, status)
 
 	// Make hiddenfiles to say that the install is done
 

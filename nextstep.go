@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-func NextStepSetup(cfg config, resultversion *versionCheck, plj *packageLocalJson) error {
+func NextStepSetup(cfg config, resultversion *versionCheck, plj *packageLocalJson, status *Status) error {
 	var message string
 	var err error
 	var filename string
@@ -67,18 +67,40 @@ func NextStepSetup(cfg config, resultversion *versionCheck, plj *packageLocalJso
 	}
 
 	// Safty check to see if this is a install or update
+
+	commandStatus, err := status.GetStatus()
+	if err != nil {
+		return fmt.Errorf("%w", err)
+	}
+
 	setupStatus := false
 	_, err = os.ReadDir(plj.GetLocalWebpath())
 	if err != nil {
 		if os.IsNotExist(err) {
-			setupStatus = false
+			setupStatus = false //install
 		} else {
 			return fmt.Errorf("cannot check installation status: %w", err)
 		}
 	} else {
 		setupStatus = true //update
 	}
-	if setupStatus == true {
+
+	switch {
+
+	// So a broken update setup
+	case setupStatus == false && commandStatus == "update":
+		return fmt.Errorf("command given is update, but system says install")
+
+	// Working installation
+	case setupStatus == false && commandStatus == "install":
+		fmt.Println("Installation setup...")
+
+	case setupStatus == true && commandStatus == "install":
+		return fmt.Errorf("NextStep is already installed, run 'sudo nstep update'")
+
+	// Working update setup
+	case setupStatus == true && commandStatus == "update":
+
 		var err error
 		var name string
 
