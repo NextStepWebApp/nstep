@@ -21,7 +21,7 @@ func main() {
 	}
 
 	// Load the local package json
-	plj, err := loadlocalpackage(cfg)
+	plj, err := Loadlocalpackage(cfg)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
