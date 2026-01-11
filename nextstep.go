@@ -36,7 +36,7 @@ func NextStepSetup(cfg config, resultversion *versionCheck, plj *packageLocalJso
 
 	// So a broken update setup
 	case setupStatus == false && commandStatus == "update":
-		return fmt.Errorf("command given is update, but system says install")
+		return fmt.Errorf("command given is update system says install, run 'sudo nstep install'\n")
 
 	// Working installation
 	case setupStatus == false && commandStatus == "install":
