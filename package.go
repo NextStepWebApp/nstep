@@ -9,6 +9,8 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"path/filepath"
+	"strings"
 )
 
 // For online json
@@ -177,10 +179,11 @@ func NextStepSetup(cfg config, resultversion *versionCheck, plj *packageLocalJso
 		// run the extra update stuff: bakup the nstep instance
 		dirs := plj.GetRequiredDirs()
 
-		for i, dir := range dirs {
+		for _, dir := range dirs {
 			// make the dir name
-			fmt.Println(i)
-			name = fmt.Sprintf("%s/'%s'", cfg.GetBackupPath(), dir)
+			cleanPath := filepath.Clean(dir)
+			safeName := strings.ReplaceAll(strings.Trim(cleanPath, "/"), "/", "-")
+			name = fmt.Sprintf("%s/%s", cfg.GetBackupPath(), safeName)
 			err = os.Rename(dir, name)
 			if err != nil {
 				return fmt.Errorf("cannot backup %s %w", dir, err)
