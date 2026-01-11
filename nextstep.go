@@ -195,12 +195,12 @@ func nextStepBackup(cfg config, resultversion *versionCheck, plj packageLocalJso
 	// Now compress it to a compressed file (.tar.gz)
 	fmt.Println("Compressing backup...")
 
-	tarballPath := fmt.Sprintf("%s/.tar.gz", versionbackup)
+	tarballPath := fmt.Sprintf("%s.tar.gz", versionbackup)
 
 	// Create tarball
 	cmd := exec.Command("tar", "-czf", tarballPath, "-C", cfg.GetBackupPath(), resultversion.GetCurrentVersion())
 	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("failed to create tarball: %w", err)
+		return fmt.Errorf("failed to create tarball: %w\n", err)
 	}
 
 	return nil
