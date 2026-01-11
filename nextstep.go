@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 )
@@ -11,6 +12,44 @@ func NextStepSetup(cfg config, resultversion *versionCheck, plj *packageLocalJso
 	var message string
 	var err error
 	var filename string
+
+	// Safty check to see if this is a install or update
+
+	commandStatus, err := status.GetStatus()
+	if err != nil {
+		return fmt.Errorf("%w", err)
+	}
+
+	setupStatus := false
+	_, err = os.ReadDir(plj.GetLocalWebpath())
+	if err != nil {
+		if os.IsNotExist(err) {
+			setupStatus = false //install
+		} else {
+			return fmt.Errorf("cannot check installation status: %w", err)
+		}
+	} else {
+		setupStatus = true //update
+	}
+
+	switch {
+
+	// So a broken update setup
+	case setupStatus == false && commandStatus == "update":
+		return fmt.Errorf("command given is update, but system says install")
+
+	// Working installation
+	case setupStatus == false && commandStatus == "install":
+		fmt.Println("Installation setup...")
+
+	// Alreaddy installed
+	case setupStatus == true && commandStatus == "install":
+		return fmt.Errorf("NextStep is already installed, run 'sudo nstep update'\n")
+
+	// Working update setup
+	case setupStatus == true && commandStatus == "update":
+		fmt.Println("Update setup...")
+	}
 
 	// Nstep lock check
 	lockfile, err := LockNstep(cfg)
@@ -66,73 +105,12 @@ func NextStepSetup(cfg config, resultversion *versionCheck, plj *packageLocalJso
 		return fmt.Errorf("Error symlinking %w", err)
 	}
 
-	// Safty check to see if this is a install or update
-
-	commandStatus, err := status.GetStatus()
-	if err != nil {
-		return fmt.Errorf("%w", err)
-	}
-
-	setupStatus := false
-	_, err = os.ReadDir(plj.GetLocalWebpath())
-	if err != nil {
-		if os.IsNotExist(err) {
-			setupStatus = false //install
-		} else {
-			return fmt.Errorf("cannot check installation status: %w", err)
-		}
-	} else {
-		setupStatus = true //update
-	}
-
-	switch {
-
-	// So a broken update setup
-	case setupStatus == false && commandStatus == "update":
-		return fmt.Errorf("command given is update, but system says install")
-
-	// Working installation
-	case setupStatus == false && commandStatus == "install":
-		fmt.Println("Installation setup...")
-
-	// Alreaddy installed
-	case setupStatus == true && commandStatus == "install":
-		return fmt.Errorf("NextStep is already installed, run 'sudo nstep update'")
-
-	// Working update setup
-	case setupStatus == true && commandStatus == "update":
-
-		var err error
-		var name string
-
-		// run the extra update stuff: bakup the nstep instance
-
-		// make the version directory
-		versionbackup := fmt.Sprintf("%s/%s", cfg.GetBackupPath(), resultversion.GetCurrentVersion())
-		err = os.MkdirAll(versionbackup, 0755)
+	// Run extra update stuff
+	if commandStatus == "update" {
+		err = nextStepBackup(cfg, resultversion, *plj)
 		if err != nil {
-			return fmt.Errorf("cannot make %s %w", versionbackup, err)
+			return fmt.Errorf("%w", err)
 		}
-
-		dirs := plj.GetRequiredDirs()
-
-		for _, dir := range dirs {
-			// make the dir name
-			cleanPath := filepath.Clean(dir)
-			safeName := strings.ReplaceAll(strings.Trim(cleanPath, "/"), "/", "-")
-			name = fmt.Sprintf("%s/%s", versionbackup, safeName)
-			err = os.Rename(dir, name)
-			if err != nil {
-				return fmt.Errorf("cannot backup %s %w", dir, err)
-			}
-		}
-		// Now need to move the web app source code itself
-		name = fmt.Sprintf("%s/%s", versionbackup, plj.GetLocalWebpath())
-		err = os.Rename(plj.GetLocalWebpath(), name)
-
-		// Now compress it to a compressed file (.tar.gz)
-		fmt.Println("Compress part")
-
 	}
 
 	// get the current version to the web portal
@@ -177,5 +155,51 @@ func NextStepSetup(cfg config, resultversion *versionCheck, plj *packageLocalJso
 	// get the current code and move to web portal
 	// Update backs up the db (so db is seperate between update)
 	// New db gets updated by scripts if needed
+	return nil
+}
+
+func nextStepBackup(cfg config, resultversion *versionCheck, plj packageLocalJson) error {
+	// run the extra update stuff: bakup the nstep instance
+	var err error
+	var name string
+
+	// make the version directory
+	versionbackup := fmt.Sprintf("%s/%s", cfg.GetBackupPath(), resultversion.GetCurrentVersion())
+	err = os.MkdirAll(versionbackup, 0755)
+	if err != nil {
+		return fmt.Errorf("cannot make %s %w", versionbackup, err)
+	}
+
+	dirs := plj.GetRequiredDirs()
+
+	for _, dir := range dirs {
+		// make the dir name
+		cleanPath := filepath.Clean(dir)
+		safeName := strings.ReplaceAll(strings.Trim(cleanPath, "/"), "/", "-")
+		name = fmt.Sprintf("%s/%s", versionbackup, safeName)
+		err = os.Rename(dir, name)
+		if err != nil {
+			return fmt.Errorf("cannot backup %s %w", dir, err)
+		}
+	}
+
+	// Now need to move the web app source code itself
+	name = fmt.Sprintf("%s/%s", versionbackup, plj.GetLocalWebpath())
+	err = os.Rename(plj.GetLocalWebpath(), name)
+	if err != nil {
+		return fmt.Errorf("%w", err)
+	}
+
+	// Now compress it to a compressed file (.tar.gz)
+	fmt.Println("Compressing backup...")
+
+	tarballPath := fmt.Sprintf("%s/.tar.gz", versionbackup)
+
+	// Create tarball
+	cmd := exec.Command("tar", "-czf", tarballPath, "-C", cfg.GetBackupPath(), resultversion.GetCurrentVersion())
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("failed to create tarball: %w", err)
+	}
+
 	return nil
 }
