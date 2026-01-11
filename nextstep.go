@@ -182,12 +182,6 @@ func nextStepBackup(cfg config, resultversion *versionCheck, plj packageLocalJso
 			return fmt.Errorf("cannot backup %s %w", dir, err)
 		}
 	}
-	// Now need to move the web app source code itself
-	name = fmt.Sprintf("%s/%s", versionbackup, plj.GetLocalWebpath())
-	err = os.Rename(plj.GetLocalWebpath(), name)
-	if err != nil {
-		return fmt.Errorf("%w", err)
-	}
 
 	// Now need to move the web app source code itself
 	cleanPath := filepath.Clean(plj.GetLocalWebpath())
