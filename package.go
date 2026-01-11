@@ -177,20 +177,28 @@ func NextStepSetup(cfg config, resultversion *versionCheck, plj *packageLocalJso
 		var name string
 
 		// run the extra update stuff: bakup the nstep instance
+
+		// make the version directory
+		versionbackup := fmt.Sprintf("%s/%s", cfg.GetBackupPath(), resultversion.GetCurrentVersion())
+		err = os.MkdirAll(versionbackup, 0755)
+		if err != nil {
+			return fmt.Errorf("cannot make %s %w", versionbackup, err)
+		}
+
 		dirs := plj.GetRequiredDirs()
 
 		for _, dir := range dirs {
 			// make the dir name
 			cleanPath := filepath.Clean(dir)
 			safeName := strings.ReplaceAll(strings.Trim(cleanPath, "/"), "/", "-")
-			name = fmt.Sprintf("%s/%s", cfg.GetBackupPath(), safeName)
+			name = fmt.Sprintf("%s/%s", versionbackup, safeName)
 			err = os.Rename(dir, name)
 			if err != nil {
 				return fmt.Errorf("cannot backup %s %w", dir, err)
 			}
 		}
 		// Now need to move the web app source code itself
-		name = fmt.Sprintf("%s/%s", cfg.GetBackupPath(), plj.GetLocalWebpath())
+		name = fmt.Sprintf("%s/%s", versionbackup, plj.GetLocalWebpath())
 		err = os.Rename(plj.GetLocalWebpath(), name)
 
 		// Now compress it to a compressed file (.tar.gz)
