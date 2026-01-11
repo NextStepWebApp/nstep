@@ -10,8 +10,37 @@ const (
 	nstepconfigfile = "/etc/nstep/config.json"
 )
 
+// Store the status of the command
+type Status struct {
+	install bool
+	update  bool
+}
+
+func (s *Status) isUpdate() {
+	s.update = true
+}
+
+func (s *Status) isInstall() {
+	s.install = true
+}
+
+func (s *Status) GetStatus() (string, error) {
+	if s.install == true && s.update == true {
+		return "", fmt.Errorf("both install and update are true")
+	}
+	if s.install == true {
+		return "install", nil
+	}
+	if s.update == true {
+		return "update", nil
+	}
+	return "", fmt.Errorf("both install and update are false")
+}
+
 func main() {
 	var err error
+
+	status := &Status{install: false, update: false}
 
 	// Load the config json
 	cfg, err := Loadconfig(nstepconfigfile)
@@ -46,6 +75,8 @@ func main() {
 	switch command {
 
 	case "install":
+		status.isInstall()
+
 		// Check if running as root
 		err = SudoPowerChecker()
 		PowerHandler(err)
@@ -57,6 +88,8 @@ func main() {
 		}
 
 	case "update":
+		status.isUpdate()
+
 		// Check if running as root
 		err = SudoPowerChecker()
 		PowerHandler(err)

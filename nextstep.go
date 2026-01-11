@@ -76,7 +76,7 @@ func NextStepSetup(cfg config, resultversion *versionCheck, plj *packageLocalJso
 			return fmt.Errorf("cannot check installation status: %w", err)
 		}
 	} else {
-		setupStatus = true
+		setupStatus = true //update
 	}
 	if setupStatus == true {
 		var err error

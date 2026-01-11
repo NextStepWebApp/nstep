@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"os/user"
-	"strconv"
 )
 
 func InstallNextStep(plj *packageLocalJson, cfg config) error {
@@ -20,14 +18,14 @@ func InstallNextStep(plj *packageLocalJson, cfg config) error {
 		return fmt.Errorf("error executing nextstep install script %w\n", err)
 	}
 
+	// Make the required directories with the write permissions and ownerships
 	dirs := plj.GetRequiredDirs()
 
-	// Make the required directories with the write permissions and ownerships
 	for _, dir := range dirs {
 		if dir == "/var/lib/nextstepwebapp" {
 			err = os.MkdirAll(dir, 0775)
 			// Get the uid, gid for the chown function
-			uid, gid, err := getUidGid("http")
+			uid, gid, err := GetUidGid("http")
 			if err != nil {
 				return fmt.Errorf("Error get uid gid %w\n", err)
 			}
@@ -55,24 +53,4 @@ func InstallNextStep(plj *packageLocalJson, cfg config) error {
 	fmt.Println("Nextstep installation completed successfully!")
 
 	return nil
-}
-
-// This function gets the uid, gid from the group you give it
-// Usefull to use with chown
-func getUidGid(group string) (uid int, gid int, err error) {
-	groupuser, err := user.Lookup(group)
-	if err != nil {
-		return 0, 0, fmt.Errorf("cannot find group %w\n", err)
-	}
-
-	uid, err = strconv.Atoi(groupuser.Uid)
-	if err != nil {
-		return 0, 0, fmt.Errorf("cannot get uid %w\n", err)
-	}
-	gid, err = strconv.Atoi(groupuser.Gid)
-	if err != nil {
-		return 0, 0, fmt.Errorf("cannot get gid %w\n", err)
-	}
-
-	return uid, gid, nil
 }

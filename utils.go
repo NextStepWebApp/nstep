@@ -9,7 +9,29 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"os/user"
+	"strconv"
 )
+
+// This function gets the uid, gid from the group you give it
+// Usefull to use with chown
+func GetUidGid(group string) (uid int, gid int, err error) {
+	groupuser, err := user.Lookup(group)
+	if err != nil {
+		return 0, 0, fmt.Errorf("cannot find group %w\n", err)
+	}
+
+	uid, err = strconv.Atoi(groupuser.Uid)
+	if err != nil {
+		return 0, 0, fmt.Errorf("cannot get uid %w\n", err)
+	}
+	gid, err = strconv.Atoi(groupuser.Gid)
+	if err != nil {
+		return 0, 0, fmt.Errorf("cannot get gid %w\n", err)
+	}
+
+	return uid, gid, nil
+}
 
 func CopyDir(src, dst string) error {
 	if err := os.MkdirAll(dst, 0755); err != nil {
