@@ -111,10 +111,20 @@ func NextStepSetup(cfg config, resultversion *versionCheck, plj *packageLocalJso
 		if err != nil {
 			return fmt.Errorf("%w", err)
 		}
+
+	}
+
+	// Create or recreate the nextstep structure (destroyed by the renames!)
+	err = nextStepCreate(*plj)
+	if err != nil {
+		return fmt.Errorf("%w", err)
 	}
 
 	// get the current version to the web portal
 	err = CopyDir(currentfilepath, plj.GetLocalWebpath())
+	if err != nil {
+		return fmt.Errorf("Error copy current to webpath %w\n", err)
+	}
 
 	// Move all the files to there places
 	moves := [][2]string{
@@ -155,6 +165,34 @@ func NextStepSetup(cfg config, resultversion *versionCheck, plj *packageLocalJso
 	// get the current code and move to web portal
 	// Update backs up the db (so db is seperate between update)
 	// New db gets updated by scripts if needed
+	return nil
+}
+
+func nextStepCreate(plj packageLocalJson) error {
+	var err error
+	// Make the required directories with the write permissions and ownerships
+	dirs := plj.GetRequiredDirs()
+
+	for _, dir := range dirs {
+		if dir == "/var/lib/nextstepwebapp" {
+			err = os.MkdirAll(dir, 0775)
+			// Get the uid, gid for the chown function
+			uid, gid, err := GetUidGid("http")
+			if err != nil {
+				return fmt.Errorf("Error get uid gid %w\n", err)
+			}
+			err = os.Chown(dir, uid, gid)
+			if err != nil {
+				return fmt.Errorf("Error changing ownership of %s %w\n", dir, err)
+			}
+
+		} else {
+			err = os.MkdirAll(dir, 0755)
+		}
+		if err != nil {
+			return fmt.Errorf("cannot create directory %s %w\n", dir, err)
+		}
+	}
 	return nil
 }
 

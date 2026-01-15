@@ -78,7 +78,7 @@ func CopyFile(src, dst string) error {
 	defer dstFile.Close()
 
 	_, err = io.Copy(dstFile, srcFile)
-	fmt.Printf("Copy %s -> %s", srcFile.Name(), dstFile.Name())
+	fmt.Printf("Copy %s -> %s\n", srcFile.Name(), dstFile.Name())
 
 	return err
 }
