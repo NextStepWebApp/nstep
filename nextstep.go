@@ -176,22 +176,27 @@ func nextStepCreate(plj packageLocalJson) error {
 	for _, dir := range dirs {
 		if dir == "/var/lib/nextstepwebapp" {
 			err = os.MkdirAll(dir, 0775)
-			// Get the uid, gid for the chown function
-			uid, gid, err := GetUidGid("http")
 			if err != nil {
-				return fmt.Errorf("Error get uid gid %w\n", err)
-			}
-			err = os.Chown(dir, uid, gid)
-			if err != nil {
-				return fmt.Errorf("Error changing ownership of %s %w\n", dir, err)
+				return fmt.Errorf("cannot create directory %s %w\n", dir, err)
 			}
 
 		} else {
 			err = os.MkdirAll(dir, 0755)
+			if err != nil {
+				return fmt.Errorf("cannot create directory %s %w\n", dir, err)
+			}
 		}
+
+		// Get the uid, gid for the chown function
+		uid, gid, err := GetUidGid("http")
 		if err != nil {
-			return fmt.Errorf("cannot create directory %s %w\n", dir, err)
+			return fmt.Errorf("Error get uid gid %w\n", err)
 		}
+		err = os.Chown(dir, uid, gid)
+		if err != nil {
+			return fmt.Errorf("Error changing ownership of %s %w\n", dir, err)
+		}
+
 	}
 	return nil
 }
