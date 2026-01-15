@@ -11,7 +11,7 @@ func UpdateNextStep(cfg config, plj *packageLocalJson, status *Status) error {
 	// function from package.go uses methods to get information
 	resultversion, err := Versionchecker(cfg, plj)
 	if err != nil {
-		return fmt.Errorf("Error checking version %w", err)
+		return fmt.Errorf("Error checking version %w\n", err)
 	}
 
 	fmt.Println(resultversion.GetMessage())
@@ -38,7 +38,7 @@ func UpdateNextStep(cfg config, plj *packageLocalJson, status *Status) error {
 
 		err := NextStepSetup(cfg, resultversion, plj, status)
 		if err != nil {
-			return fmt.Errorf("%w", err)
+			return fmt.Errorf("Error NextStepWebApp setup %w\n", err)
 		}
 
 	} else {

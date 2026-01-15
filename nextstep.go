@@ -241,5 +241,11 @@ func nextStepBackup(cfg config, resultversion *versionCheck, plj packageLocalJso
 		return fmt.Errorf("failed to create tarball: %w\n", err)
 	}
 
+	// Now remove the normal backup folder
+	err = os.RemoveAll(versionbackup)
+	if err != nil {
+		return fmt.Errorf("cannot remove %s %w\n", versionbackup, err)
+	}
+
 	return nil
 }

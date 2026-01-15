@@ -11,9 +11,12 @@ func InstallNextStep(plj *packageLocalJson, cfg config, status *Status) error {
 
 	// The same process as in update.go but the local version is just v0.0.0
 	resultversion, err := Versionchecker(cfg, plj)
+	if err != nil {
+		return fmt.Errorf("Error checking version %w\n", err)
+	}
 	err = NextStepSetup(cfg, resultversion, plj, status)
 	if err != nil {
-		return fmt.Errorf("%w", err)
+		return fmt.Errorf("Error NextStepWebApp setup %w\n", err)
 	}
 
 	// Run the setup_nextstep.sh script
