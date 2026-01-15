@@ -16,7 +16,7 @@ import (
 // This function gets the uid, gid from the group you give it
 // Usefull to use with chown
 func GetUidGid(group string) (uid int, gid int, err error) {
-	groupuser, err := user.Lookup(group)
+	groupuser, err := user.LookupId(group)
 	if err != nil {
 		return 0, 0, fmt.Errorf("cannot find group %w\n", err)
 	}
