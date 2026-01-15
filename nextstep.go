@@ -189,6 +189,7 @@ func nextStepCreate(plj packageLocalJson) error {
 
 		// Get the uid, gid for the chown function
 		uid, gid, err := GetUidGid("http")
+		fmt.Printf("uid: %d\ngid: %d\n", uid, gid)
 		if err != nil {
 			return fmt.Errorf("Error get uid gid %w\n", err)
 		}
