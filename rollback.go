@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -16,15 +17,16 @@ func RollbackNextStep(cfg config) error {
 		return fmt.Errorf("cannot read %s %w", cfg.GetBackupPath(), err)
 	}
 
-	for i, entry := range entries {
+	versions := make([]string, 0, 5)
+
+	for _, entry := range entries {
+		versions = append(versions, entry.Name())
+	}
+
+	for i, version := range versions {
 		pattern := `v\d+\.\d+\.\d+`
-		r, err := regexp.Compile(pattern)
-		if err != nil {
-			return fmt.Errorf("invalid regex %s %w", entry.Name(), err)
-		}
-
-		cleanName := r.FindString(entry.Name())
-
+		r := regexp.MustCompile(pattern)
+		cleanName := r.FindString(version)
 		fmt.Printf("%d  nextstep/%s\n", i, cleanName)
 	}
 
@@ -37,10 +39,14 @@ func RollbackNextStep(cfg config) error {
 	if err != nil {
 		return fmt.Errorf("Error reading input %w", err)
 	}
-
 	response = strings.TrimSpace(response)
 
-	fmt.Println(response)
+	num, err := strconv.Atoi(response)
+	if err != nil {
+		return fmt.Errorf("invalid number: %w", err)
+	}
+
+	fmt.Println(versions[num])
 
 	return nil
 }
