@@ -104,17 +104,17 @@ func main() {
 		err = SudoPowerChecker()
 		PowerHandler(err)
 
-		fmt.Println("rollbacker")
-	case "remove":
-		// check if running as root
-		err = SudoPowerChecker()
-		PowerHandler(err)
-
 		err = RollbackNextStep(cfg)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
+	case "remove":
+		// check if running as root
+		err = SudoPowerChecker()
+		PowerHandler(err)
+
+		fmt.Println("remover")
 
 	case "unlock":
 
