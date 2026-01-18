@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -14,11 +15,13 @@ func UpdateNextStep(cfg config, plj *packageLocalJson, status *Status) error {
 		return fmt.Errorf("Error checking version %w\n", err)
 	}
 
-	fmt.Println(resultversion.GetMessage())
 	if resultversion.IsUpdateAvailable() {
+		fmt.Println(resultversion.GetMessage())
 		fmt.Printf("New version available: %s\n", resultversion.GetLatestVersion())
 		fmt.Printf("Download: %s\n", resultversion.GetDownloadURL())
 		fmt.Printf("Release notes: %s\n", resultversion.GetReleaseNotes())
+	} else {
+		return errors.New(resultversion.GetMessage())
 	}
 
 	// confirmation part if there is a update
