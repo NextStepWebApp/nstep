@@ -167,6 +167,12 @@ func NextStepSetup(cfg config, resultversion *versionCheck, plj *packageLocalJso
 		return fmt.Errorf("%w", err)
 	}
 
+	// Now update the version in the local package.json
+	err = Localpackageupdater(plj, resultversion, cfg)
+	if err != nil {
+		return fmt.Errorf("Error updating local package %w", err)
+	}
+
 	return nil
 }
 
