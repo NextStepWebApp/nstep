@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"os"
 	"regexp"
@@ -43,7 +44,12 @@ func RollbackNextStep(cfg config) error {
 
 	num, err := strconv.Atoi(response)
 	if err != nil {
-		return fmt.Errorf("invalid number: %w", err)
+		return errors.New("Invalid number")
+	}
+	versionlen := len(versions)
+
+	if num > versionlen {
+		return errors.New("Not a valid option")
 	}
 
 	fmt.Println(versions[num])
