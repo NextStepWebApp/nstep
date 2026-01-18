@@ -162,7 +162,10 @@ func NextStepSetup(cfg config, resultversion *versionCheck, plj *packageLocalJso
 	}
 
 	// Now give all the stuff the correct permssion and ownership
-	// Get the uid, gid for the chown function
+	err = nextstepPermissionManager(plj)
+	if err != nil {
+		return fmt.Errorf("%w", err)
+	}
 
 	return nil
 }
@@ -202,7 +205,7 @@ func nextstepPermissionHelper(dir string) error {
 	return nil
 }
 
-func nextstepPermissionManager(plj packageLocalJson) error {
+func nextstepPermissionManager(plj *packageLocalJson) error {
 	// The nextstepCreate function has to run first to make sure
 	// that the required dirs are created
 	var err error
