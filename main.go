@@ -83,7 +83,7 @@ func main() {
 
 		err = InstallNextStep(plj, cfg, status)
 		if err != nil {
-			fmt.Fprint(os.Stderr, err)
+			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
 
@@ -96,7 +96,7 @@ func main() {
 
 		err = UpdateNextStep(cfg, plj, status)
 		if err != nil {
-			fmt.Fprint(os.Stderr, err)
+			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
 	case "rollback":
@@ -113,7 +113,7 @@ func main() {
 
 		err = UnlockNstep(cfg)
 		if err != nil {
-			fmt.Fprint(os.Stderr, err)
+			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
 	case "help", "--help", "-h":
