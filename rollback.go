@@ -25,9 +25,7 @@ func RollbackNextStep(cfg config) error {
 	}
 
 	for i, version := range versions {
-		pattern := `v\d+\.\d+\.\d+`
-		r := regexp.MustCompile(pattern)
-		cleanName := r.FindString(version)
+		cleanName := regexVersion(version)
 		fmt.Printf("%d  nextstep/%s\n", i, cleanName)
 	}
 
@@ -61,8 +59,16 @@ func RollbackNextStep(cfg config) error {
 	}
 
 	// Name of the extracted directory
-	tempDir := fmt.Sprintf("%s/%s", os.TempDir(), versions[num])
+	cleanName := regexVersion(versions[num])
+	tempDir := fmt.Sprintf("%s/%s", os.TempDir(), cleanName)
 	fmt.Println(tempDir)
 
 	return nil
+}
+
+func regexVersion(version string) string {
+	pattern := `v\d+\.\d+\.\d+`
+	r := regexp.MustCompile(pattern)
+	cleanName := r.FindString(version)
+	return cleanName
 }
