@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"regexp"
 	"strings"
 )
 
@@ -16,7 +17,15 @@ func RollbackNextStep(cfg config) error {
 	}
 
 	for i, entry := range entries {
-		fmt.Printf("%d  nextstep/%s", i, entry.Name())
+		pattern := `v\d+\.\d+\.\d+`
+		r, err := regexp.Compile(pattern)
+		if err != nil {
+			return fmt.Errorf("invalid regex %s %w", entry.Name(), err)
+		}
+
+		cleanName := r.FindString(entry.Name())
+
+		fmt.Printf("%d  nextstep/%s\n", i, cleanName)
 	}
 
 	fmt.Println(":: Select version to rollback:")
