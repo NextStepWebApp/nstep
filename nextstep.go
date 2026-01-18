@@ -170,14 +170,7 @@ func NextStepSetup(cfg config, resultversion *versionCheck, plj *packageLocalJso
 	return nil
 }
 
-func nextstepPermissionHelper(dir string) error {
-
-	// Get the uid and gid of http for chown
-	uid, gid, err := GetUidGid("http")
-	fmt.Printf("uid: %d\ngid: %d\n", uid, gid)
-	if err != nil {
-		return fmt.Errorf("Error get uid gid %w\n", err)
-	}
+func nextstepPermissionHelper(dir string, uid, gid int) error {
 
 	entries, err := os.ReadDir(dir)
 	if err != nil {
@@ -190,14 +183,13 @@ func nextstepPermissionHelper(dir string) error {
 
 		if entry.IsDir() {
 			// recurssion to also give chown in dirs
-			if err := nextstepPermissionHelper(path); err != nil {
+			if err := nextstepPermissionHelper(path, uid, gid); err != nil {
 				return err
-			} else {
-				err = os.Chown(path, uid, gid)
-				if err != nil {
-					return fmt.Errorf("Error changing ownership of %s %w\n", dir, err)
-				}
-
+			}
+		} else {
+			err = os.Chown(path, uid, gid)
+			if err != nil {
+				return fmt.Errorf("Error changing ownership of %s %w\n", dir, err)
 			}
 		}
 	}
@@ -211,8 +203,15 @@ func nextstepPermissionManager(plj *packageLocalJson) error {
 	var err error
 	dirs := plj.GetRequiredDirs()
 
+	// Get the uid and gid of http for chown
+	uid, gid, err := GetUidGid("http")
+	fmt.Printf("uid: %d\ngid: %d\n", uid, gid)
+	if err != nil {
+		return fmt.Errorf("Error get uid gid %w\n", err)
+	}
+
 	for _, dir := range dirs {
-		err = nextstepPermissionHelper(dir)
+		err = nextstepPermissionHelper(dir, uid, gid)
 		if err != nil {
 			return fmt.Errorf("%w", err)
 		}
