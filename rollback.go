@@ -48,7 +48,7 @@ func RollbackNextStep(cfg config) error {
 	}
 	versionlen := len(versions)
 
-	if num > versionlen {
+	if num >= versionlen {
 		return errors.New("Not a valid option")
 	}
 
