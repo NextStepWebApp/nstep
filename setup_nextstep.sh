@@ -14,9 +14,7 @@ installpackage() {
 }
 
 echo -ne "
--------------------------------------------------------------------------
-                        NextStep Web App Setup
--------------------------------------------------------------------------
+==> NextStep Web App Setup
 "
 
 installpackage php php-sqlite php-fpm apache python
@@ -83,7 +81,5 @@ systemctl restart httpd.service
 systemctl restart php-fpm.service
 
 echo "
--------------------------------------------------------------------------
-NextStep setup finished successfully!
--------------------------------------------------------------------------
+==> NextStep setup finished successfully!
 "
