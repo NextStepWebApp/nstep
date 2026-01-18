@@ -52,7 +52,17 @@ func RollbackNextStep(cfg config) error {
 		return errors.New("Not a valid option")
 	}
 
-	fmt.Println(versions[num])
+	// Version to backup
+	restorePath := fmt.Sprintf("%s/%s", cfg.GetBackupPath(), versions[num])
+
+	_, err = Extractpackage(restorePath, os.TempDir())
+	if err != nil {
+		return fmt.Errorf("cannot extract %s %w\n", restorePath, err)
+	}
+
+	// Name of the extracted directory
+	tempDir := fmt.Sprintf("%s/%s", os.TempDir(), versions[num])
+	fmt.Println(tempDir)
 
 	return nil
 }
