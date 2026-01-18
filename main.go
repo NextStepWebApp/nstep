@@ -11,57 +11,87 @@ const (
 )
 
 // Store the status of the command
-type Status struct {
-	install bool
-	update  bool
+type status struct {
+	install  bool
+	update   bool
+	rollback bool
 }
 
-func (s *Status) isUpdate() {
+func (s *status) isUpdate() {
 	s.update = true
 }
 
-func (s *Status) isInstall() {
+func (s *status) isInstall() {
 	s.install = true
 }
 
-func (s *Status) GetStatus() (string, error) {
-	if s.install == true && s.update == true {
-		return "", fmt.Errorf("both install and update are true")
+func (s *status) isRollback() {
+	s.rollback = true
+}
+
+func (s *status) getStatus() (string, error) {
+	// Count how many statuses are true
+	trueCount := 0
+	if s.install {
+		trueCount++
 	}
-	if s.install == true {
+	if s.update {
+		trueCount++
+	}
+	if s.rollback {
+		trueCount++
+	}
+
+	// Error if multiple statuses are set
+	if trueCount > 1 {
+		return "", fmt.Errorf("multiple statuses are set: install=%v, update=%v, rollback=%v",
+			s.install, s.update, s.rollback)
+	}
+
+	// Error if no status is set
+	if trueCount == 0 {
+		return "", fmt.Errorf("no status is set")
+	}
+
+	// Return the single true status
+	if s.install {
 		return "install", nil
 	}
-	if s.update == true {
+	if s.update {
 		return "update", nil
 	}
-	return "", fmt.Errorf("both install and update are false")
+	if s.rollback {
+		return "rollback", nil
+	}
+
+	return "", fmt.Errorf("unexpected error")
 }
 
 func main() {
 	var err error
 
-	status := &Status{install: false, update: false}
+	status := &status{install: false, update: false}
 
 	// Load the config json
-	cfg, err := Loadconfig(nstepconfigfile)
+	cfg, err := loadconfig(nstepconfigfile)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
 
 	// Load the local package json
-	plj, err := Loadlocalpackage(cfg)
+	plj, err := loadlocalpackage(cfg)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
 
 	// Check to see if the directories exist (config.go)
-	err = cfg.Diravailable()
+	err = cfg.diravailable()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "Error creating filepath", err)
-		SudoPowerChecker()
-		PowerHandler(err)
+		sudoPowerChecker()
+		powerHandler(err)
 	}
 
 	// Get the command and error handling
@@ -75,54 +105,56 @@ func main() {
 	switch command {
 
 	case "install":
+		// Check if running as root
+		err = sudoPowerChecker()
+		powerHandler(err)
+
 		status.isInstall()
 
-		// Check if running as root
-		err = SudoPowerChecker()
-		PowerHandler(err)
-
-		err = InstallNextStep(plj, cfg, status)
+		err = installNextStep(plj, cfg, status)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
 
 	case "update":
+		// Check if running as root
+		err = sudoPowerChecker()
+		powerHandler(err)
+
 		status.isUpdate()
 
-		// Check if running as root
-		err = SudoPowerChecker()
-		PowerHandler(err)
-
-		err = UpdateNextStep(cfg, plj, status)
+		err = updateNextStep(cfg, plj, status)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
 	case "rollback":
 		// Check if running as root
-		err = SudoPowerChecker()
-		PowerHandler(err)
+		err = sudoPowerChecker()
+		powerHandler(err)
 
-		err = RollbackNextStep(cfg)
+		status.isRollback()
+
+		err = rollbackNextStep(cfg, plj, status)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
 	case "remove":
 		// check if running as root
-		err = SudoPowerChecker()
-		PowerHandler(err)
+		err = sudoPowerChecker()
+		powerHandler(err)
 
 		fmt.Println("remover")
 
 	case "unlock":
 
 		// Check if running as root
-		err = SudoPowerChecker()
-		PowerHandler(err)
+		err = sudoPowerChecker()
+		powerHandler(err)
 
-		err = UnlockNstep(cfg)
+		err = unlockNstep(cfg)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)

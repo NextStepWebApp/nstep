@@ -8,20 +8,20 @@ import (
 	"strings"
 )
 
-func NextStepSetup(cfg config, resultversion *versionCheck, plj *packageLocalJson, status *Status) error {
-	var message string
+// The sourceDir is only meant for the rollback functionality
+func nextStepSetup(cfg config, resultversion *versionCheck, plj *packageLocalJson, status *status, sourceDir *string) error {
 	var err error
-	var filename string
 
 	// Safty check to see if this is a install or update
-
-	commandStatus, err := status.GetStatus()
+	commandStatus, err := status.getStatus()
 	if err != nil {
 		return fmt.Errorf("%w", err)
 	}
 
+	// These are environment checks
+
 	setupStatus := false
-	_, err = os.ReadDir(plj.GetLocalWebpath())
+	_, err = os.ReadDir(plj.getLocalWebpath())
 	if err != nil {
 		if os.IsNotExist(err) {
 			setupStatus = false //install
@@ -36,82 +36,68 @@ func NextStepSetup(cfg config, resultversion *versionCheck, plj *packageLocalJso
 
 	// So a broken update setup
 	case setupStatus == false && commandStatus == "update":
-		return fmt.Errorf("command given is update system says install, run 'sudo nstep install'\n")
+		return fmt.Errorf("command given is update system says install, run 'sudo nstep install'")
 
 	// Working installation
 	case setupStatus == false && commandStatus == "install":
-		fmt.Println("Installation setup...")
+		if sourceDir != nil {
+			return fmt.Errorf("internal error: install command, but source directory is not equal to nil")
+		}
+		fmt.Println("==> Installation setup...")
 
 	// Alreaddy installed
 	case setupStatus == true && commandStatus == "install":
-		return fmt.Errorf("NextStep is already installed, run 'sudo nstep update'\n")
+		return fmt.Errorf("nextstep is already installed, run 'sudo nstep update'")
 
 	// Working update setup
 	case setupStatus == true && commandStatus == "update":
-		fmt.Println("Update setup...")
+		if sourceDir != nil {
+			return fmt.Errorf("internal error: update command, but source directory is not equal to nil")
+		}
+		fmt.Println("==> Update setup...")
+
+	// Invalid rollback use, needs to install first
+	case setupStatus == false && commandStatus == "rollback":
+		return fmt.Errorf("nextstep is not installed, run 'sudo nstep install'")
+
+	// Working rollback setup
+	case setupStatus == true && commandStatus == "rollback":
+		// this is a saftey check for code usage
+		if sourceDir == nil {
+			return fmt.Errorf("internal error: rollback command, but source directory is nil")
+		}
+
+		fmt.Println("==> Rollback setup..")
 	}
+	// End of checks
 
 	// Nstep lock check
-	lockfile, err := LockNstep(cfg)
+	lockfile, err := lockNstep(cfg)
 	if err != nil {
 		return fmt.Errorf("Error update.lock %w", err)
 	}
 	defer lockfile.Close()
-	defer os.Remove(cfg.GetLockFilePath())
+	defer os.Remove(cfg.getLockFilePath())
 
-	// format filepath to store download
-	downloadpath := cfg.GetDownloadPath()
-	filename = fmt.Sprintf("nextstep_%s.tar.gz", resultversion.GetLatestVersion())
-	downloadfilepath := fmt.Sprintf("%s/%s", downloadpath, filename)
-
-	message, err = Downloadpackage(resultversion.GetDownloadURL(), downloadfilepath)
-
-	if err != nil {
-		return fmt.Errorf("Error downloading package %w", err)
-	}
-	println(message)
-
-	// Verifying package integrity
-
-	err = VerifyChecksum(downloadfilepath, resultversion.GetChecksum())
-
-	if err != nil {
-		return fmt.Errorf("Verification failed %w", err)
-	} else {
-		fmt.Println("Package verified successfully")
+	var currentfilepath string
+	if commandStatus == "install" || commandStatus == "update" {
+		currentfilepath, err = onlineToLocal(cfg, resultversion)
+		if err != nil {
+			return fmt.Errorf("%w", err)
+		}
 	}
 
-	// Extract the downloaded package, function from package.go
-	versionpath := cfg.GetVersionPath()
-	filename = fmt.Sprintf("nextstep_%s", resultversion.LatestVersion) // also used in currentfilepath
-	versionfilepath := fmt.Sprintf("%s/%s", versionpath, filename)
-
-	message, err = Extractpackage(downloadfilepath, versionfilepath, 1)
-	if err != nil {
-		return fmt.Errorf("Error extracting package %w: ", err)
-	}
-	println(message)
-
-	// Symlink the new version to the current one
-	err = EmtyDir(cfg.GetCurrentPath())
-	if err != nil {
-		return fmt.Errorf("%w", err)
-	}
-
-	currentfilepath := fmt.Sprintf("%s/%s", cfg.GetCurrentPath(), filename)
-
-	err = os.Symlink(versionfilepath, currentfilepath)
-	if err != nil {
-		return fmt.Errorf("Error symlinking %w", err)
-	}
-
-	// Run extra update stuff
-	if commandStatus == "update" {
+	// Run extra update and rollback stuff
+	if commandStatus == "update" || commandStatus == "rollback" {
 		err = nextStepBackup(cfg, resultversion, *plj)
 		if err != nil {
 			return fmt.Errorf("%w", err)
 		}
+	}
 
+	// Name the currentfilepath for rollback
+	if commandStatus == "rollback" {
+		currentfilepath = *sourceDir
 	}
 
 	// Create or recreate the nextstep structure (destroyed by the renames!)
@@ -120,8 +106,10 @@ func NextStepSetup(cfg config, resultversion *versionCheck, plj *packageLocalJso
 		return fmt.Errorf("%w", err)
 	}
 
+	// Do something about the tmp dir
+
 	// get the current version to the web portal
-	err = CopyDir(currentfilepath, plj.GetLocalWebpath())
+	err = copyDir(currentfilepath, plj.getLocalWebpath())
 	if err != nil {
 		return fmt.Errorf("Error copy current to webpath %w\n", err)
 	}
@@ -139,7 +127,7 @@ func NextStepSetup(cfg config, resultversion *versionCheck, plj *packageLocalJso
 
 	// Execute all moves
 	for _, move := range moves {
-		err := MoveFile(move[0], move[1])
+		err := moveFile(move[0], move[1])
 		if err != nil {
 			return fmt.Errorf("Error moving file %w\n", err)
 		}
@@ -154,7 +142,7 @@ func NextStepSetup(cfg config, resultversion *versionCheck, plj *packageLocalJso
 
 	// Remove directories
 	for _, dir := range dirsToRemove {
-		err := RemoveDir(dir)
+		err := removeDir(dir)
 		if err != nil {
 			return fmt.Errorf("Error removing directory %s %w", dir, err)
 		}
@@ -168,12 +156,63 @@ func NextStepSetup(cfg config, resultversion *versionCheck, plj *packageLocalJso
 	}
 
 	// Now update the version in the local package.json
-	err = Localpackageupdater(plj, resultversion, cfg)
+	err = localpackageupdater(plj, resultversion, cfg)
 	if err != nil {
 		return fmt.Errorf("Error updating local package %w", err)
 	}
 
 	return nil
+}
+
+func onlineToLocal(cfg config, resultversion *versionCheck) (string, error) {
+	var err error
+	var filename, message string
+	// format filepath to store download
+	downloadpath := cfg.getDownloadPath()
+	filename = fmt.Sprintf("nextstep_%s.tar.gz", resultversion.getLatestVersion())
+	downloadfilepath := fmt.Sprintf("%s/%s", downloadpath, filename)
+
+	message, err = downloadpackage(resultversion.getDownloadURL(), downloadfilepath)
+
+	if err != nil {
+		return "", fmt.Errorf("Error downloading package %w", err)
+	}
+	println(message)
+
+	// Verifying package integrity
+
+	err = verifyChecksum(downloadfilepath, resultversion.getChecksum())
+
+	if err != nil {
+		return "", fmt.Errorf("Verification failed %w", err)
+	} else {
+		fmt.Println("Package verified successfully")
+	}
+
+	// Extract the downloaded package, function from package.go
+	versionpath := cfg.getVersionPath()
+	filename = fmt.Sprintf("nextstep_%s", resultversion.LatestVersion) // also used in currentfilepath
+	versionfilepath := fmt.Sprintf("%s/%s", versionpath, filename)
+
+	message, err = extractpackage(downloadfilepath, versionfilepath, 1)
+	if err != nil {
+		return "", fmt.Errorf("Error extracting package %w: ", err)
+	}
+	println(message)
+
+	// Symlink the new version to the current one
+	err = emptyDir(cfg.getCurrentPath())
+	if err != nil {
+		return "", fmt.Errorf("%w", err)
+	}
+
+	currentfilepath := fmt.Sprintf("%s/%s", cfg.getCurrentPath(), filename)
+
+	err = os.Symlink(versionfilepath, currentfilepath)
+	if err != nil {
+		return "", fmt.Errorf("Error symlinking %w", err)
+	}
+	return currentfilepath, nil
 }
 
 func nextstepPermissionHelper(dir string, uid, gid int) error {
@@ -207,10 +246,10 @@ func nextstepPermissionManager(plj *packageLocalJson) error {
 	// The nextstepCreate function has to run first to make sure
 	// that the required dirs are created
 	var err error
-	dirs := plj.GetRequiredDirs()
+	dirs := plj.getRequiredDirs()
 
 	// Get the uid and gid of http for chown
-	uid, gid, err := GetUidGid("http")
+	uid, gid, err := getUidGid("http")
 	fmt.Printf("uid: %d\ngid: %d\n", uid, gid)
 	if err != nil {
 		return fmt.Errorf("Error get uid gid %w\n", err)
@@ -234,7 +273,7 @@ func nextstepPermissionManager(plj *packageLocalJson) error {
 func nextStepCreate(plj packageLocalJson) error {
 	var err error
 	// Make the required directories with the write permissions and ownerships
-	dirs := plj.GetRequiredDirs()
+	dirs := plj.getRequiredDirs()
 
 	for _, dir := range dirs {
 		if dir == "/var/lib/nextstepwebapp" {
@@ -260,13 +299,13 @@ func nextStepBackup(cfg config, resultversion *versionCheck, plj packageLocalJso
 	var name string
 
 	// make the version directory
-	versionbackup := fmt.Sprintf("%s/%s", cfg.GetBackupPath(), resultversion.GetCurrentVersion())
+	versionbackup := fmt.Sprintf("%s/%s", cfg.getBackupPath(), resultversion.getCurrentVersion())
 	err = os.MkdirAll(versionbackup, 0755)
 	if err != nil {
 		return fmt.Errorf("cannot make %s %w", versionbackup, err)
 	}
 
-	dirs := plj.GetRequiredDirs()
+	dirs := plj.getRequiredDirs()
 
 	for _, dir := range dirs {
 		// make the dir name
@@ -280,12 +319,12 @@ func nextStepBackup(cfg config, resultversion *versionCheck, plj packageLocalJso
 	}
 
 	// Now need to move the web app source code itself
-	cleanPath := filepath.Clean(plj.GetLocalWebpath())
+	cleanPath := filepath.Clean(plj.getLocalWebpath())
 	safeName := strings.ReplaceAll(strings.Trim(cleanPath, "/"), "/", "-")
 	name = fmt.Sprintf("%s/%s", versionbackup, safeName)
-	err = os.Rename(plj.GetLocalWebpath(), name)
+	err = os.Rename(plj.getLocalWebpath(), name)
 	if err != nil {
-		return fmt.Errorf("cannot backup web path %s: %w", plj.GetLocalWebpath(), err)
+		return fmt.Errorf("cannot backup web path %s: %w", plj.getLocalWebpath(), err)
 	}
 
 	// Now compress it to a compressed file (.tar.gz)
@@ -294,7 +333,7 @@ func nextStepBackup(cfg config, resultversion *versionCheck, plj packageLocalJso
 	tarballPath := fmt.Sprintf("%s.tar.gz", versionbackup)
 
 	// Create tarball
-	cmd := exec.Command("tar", "-czf", tarballPath, "-C", cfg.GetBackupPath(), resultversion.GetCurrentVersion())
+	cmd := exec.Command("tar", "-czf", tarballPath, "-C", cfg.getBackupPath(), resultversion.getCurrentVersion())
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("failed to create tarball: %w\n", err)
 	}

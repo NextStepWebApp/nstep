@@ -10,12 +10,12 @@ import (
 	"strings"
 )
 
-func RollbackNextStep(cfg config) error {
+func rollbackNextStep(cfg config, plj *packageLocalJson, status *status) error {
 	var err error
 
-	entries, err := os.ReadDir(cfg.GetBackupPath())
+	entries, err := os.ReadDir(cfg.getBackupPath())
 	if err != nil {
-		return fmt.Errorf("cannot read %s %w", cfg.GetBackupPath(), err)
+		return fmt.Errorf("cannot read %s %w", cfg.getBackupPath(), err)
 	}
 
 	versions := make([]string, 0, 5)
@@ -50,10 +50,10 @@ func RollbackNextStep(cfg config) error {
 		return errors.New("Not a valid option")
 	}
 
-	// Version to backup
-	restorePath := fmt.Sprintf("%s/%s", cfg.GetBackupPath(), versions[num])
+	// Version to restore
+	restorePath := fmt.Sprintf("%s/%s", cfg.getBackupPath(), versions[num])
 
-	_, err = Extractpackage(restorePath, os.TempDir(), 0)
+	_, err = extractpackage(restorePath, os.TempDir(), 0)
 	if err != nil {
 		return fmt.Errorf("cannot extract %s %w\n", restorePath, err)
 	}
@@ -62,6 +62,11 @@ func RollbackNextStep(cfg config) error {
 	cleanName := regexVersion(versions[num])
 	tempDir := fmt.Sprintf("%s/%s", os.TempDir(), cleanName)
 	fmt.Println(tempDir)
+
+	// rollback does not need the versioncheck like install and update, so that's why
+	// I justed pased a nil, the part where the versioncheck is used is also skipped in
+	// the function for rollback, so it is not needed
+	err = nextStepSetup(cfg, nil, plj, status, &tempDir)
 
 	return nil
 }

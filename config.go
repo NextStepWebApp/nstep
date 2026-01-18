@@ -26,38 +26,38 @@ type nstepjson struct {
 
 // Functions to get specific info from the json
 
-func (c config) GetBackupPath() string {
+func (c config) getBackupPath() string {
 	return c.Nstep.NstepBackupPath
 }
 
-func (c config) GetPackagePath() string {
+func (c config) getPackagePath() string {
 	return c.Packages.FilePath
 }
 
-func (c config) GetLockFilePath() string {
+func (c config) getLockFilePath() string {
 	return c.Nstep.Lockfile
 }
 
-func (c config) GetDownloadPath() string {
+func (c config) getDownloadPath() string {
 	return c.Nstep.NstepDownloadPath
 }
 
-func (c config) GetVersionPath() string {
+func (c config) getVersionPath() string {
 	return c.Nstep.NstepVersionPath
 }
 
-func (c config) GetCurrentPath() string {
+func (c config) getCurrentPath() string {
 	return c.Nstep.NstepCurrentPath
 }
 
 // function to see if the dirs are available,
 // if not create them
-func (c config) Diravailable() error {
+func (c config) diravailable() error {
 	paths := []string{
-		c.GetDownloadPath(),
-		c.GetVersionPath(),
-		c.GetBackupPath(),
-		c.GetCurrentPath(),
+		c.getDownloadPath(),
+		c.getVersionPath(),
+		c.getBackupPath(),
+		c.getCurrentPath(),
 	}
 
 	for _, path := range paths {
@@ -70,7 +70,7 @@ func (c config) Diravailable() error {
 }
 
 // Create a struct print called in main
-func Loadconfig(nstepconfigfile string) (config, error) {
+func loadconfig(nstepconfigfile string) (config, error) {
 
 	configfile, err := os.Open(nstepconfigfile)
 	if err != nil {

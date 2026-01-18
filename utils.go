@@ -15,7 +15,7 @@ import (
 
 // This function gets the uid, gid from the group you give it
 // Usefull to use with chown
-func GetUidGid(group string) (uid int, gid int, err error) {
+func getUidGid(group string) (uid int, gid int, err error) {
 	groupuser, err := user.Lookup(group)
 	if err != nil {
 		return 0, 0, fmt.Errorf("cannot find group %w\n", err)
@@ -33,7 +33,7 @@ func GetUidGid(group string) (uid int, gid int, err error) {
 	return uid, gid, nil
 }
 
-func CopyDir(src, dst string) error {
+func copyDir(src, dst string) error {
 	if err := os.MkdirAll(dst, 0755); err != nil {
 		return fmt.Errorf("cannot create destination directory: %w", err)
 	}
@@ -49,12 +49,12 @@ func CopyDir(src, dst string) error {
 
 		if entry.IsDir() {
 			// Recursively copy subdirectory
-			if err := CopyDir(srcPath, dstPath); err != nil {
+			if err := copyDir(srcPath, dstPath); err != nil {
 				return err
 			}
 		} else {
 			// Copy file
-			if err := CopyFile(srcPath, dstPath); err != nil {
+			if err := copyFile(srcPath, dstPath); err != nil {
 				return err
 			}
 		}
@@ -63,7 +63,7 @@ func CopyDir(src, dst string) error {
 	return nil
 }
 
-func CopyFile(src, dst string) error {
+func copyFile(src, dst string) error {
 	srcFile, err := os.Open(src)
 	if err != nil {
 		return err
@@ -83,7 +83,7 @@ func CopyFile(src, dst string) error {
 	return err
 }
 
-func EmtyDir(dirpath string) error {
+func emptyDir(dirpath string) error {
 	entries, err := os.ReadDir(dirpath)
 	if err != nil && !os.IsNotExist(err) {
 		return fmt.Errorf("Error reading current directory %w", err)
@@ -98,15 +98,15 @@ func EmtyDir(dirpath string) error {
 	return nil
 }
 
-func SudoPowerChecker() error {
+func sudoPowerChecker() error {
 	if os.Geteuid() != 0 {
 		return fmt.Errorf("this command must be run as root (use sudo)")
 	}
 	return nil
 }
 
-func PowerHandler(err error) {
-	err = SudoPowerChecker()
+func powerHandler(err error) {
+	err = sudoPowerChecker()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
@@ -114,7 +114,7 @@ func PowerHandler(err error) {
 }
 
 // a function that moves a file from old path to new path
-func MoveFile(oldPath, newPath string) error {
+func moveFile(oldPath, newPath string) error {
 	err := os.Rename(oldPath, newPath)
 	if err != nil {
 		return fmt.Errorf("failed to move %s to %s: %w", oldPath, newPath, err)
@@ -123,7 +123,7 @@ func MoveFile(oldPath, newPath string) error {
 }
 
 // function that removes a directory
-func RemoveDir(path string) error {
+func removeDir(path string) error {
 	err := os.RemoveAll(path)
 	if err != nil {
 		return fmt.Errorf("failed to remove directory %s: %w", path, err)
@@ -134,8 +134,8 @@ func RemoveDir(path string) error {
 // These are the package utils
 
 // Load the local package.json, called/used in main.go
-func Loadlocalpackage(cfg config) (*packageLocalJson, error) {
-	packagepath := cfg.GetPackagePath()
+func loadlocalpackage(cfg config) (*packageLocalJson, error) {
+	packagepath := cfg.getPackagePath()
 
 	jsonLocalFile, err := os.Open(packagepath)
 	if err != nil {
@@ -152,7 +152,7 @@ func Loadlocalpackage(cfg config) (*packageLocalJson, error) {
 	return packageLocalItem, nil
 }
 
-func Downloadpackage(url, filepath string) (message string, err error) {
+func downloadpackage(url, filepath string) (message string, err error) {
 	resp, err := http.Get(url)
 	if err != nil {
 		return "", fmt.Errorf("cannot fetch remote package %w\n", err)
@@ -177,7 +177,7 @@ func Downloadpackage(url, filepath string) (message string, err error) {
 	return "Download completed successfully", nil
 }
 
-func Extractpackage(targzpath, destdir string, striplevel int) (message string, err error) {
+func extractpackage(targzpath, destdir string, striplevel int) (message string, err error) {
 	if err := os.MkdirAll(destdir, 0755); err != nil {
 		return "", fmt.Errorf("cannot create destination directory %w\n", err)
 	}
@@ -194,7 +194,7 @@ func Extractpackage(targzpath, destdir string, striplevel int) (message string, 
 
 // VerifyChecksum calculates the SHA256 checksum of a file
 // and compares it with the expected checksum
-func VerifyChecksum(filepathdownload, expectedChecksum string) error {
+func verifyChecksum(filepathdownload, expectedChecksum string) error {
 	//expectedChecksum is from the online json
 	file, err := os.Open(filepathdownload)
 	if err != nil {

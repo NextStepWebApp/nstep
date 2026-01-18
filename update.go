@@ -8,20 +8,20 @@ import (
 	"strings"
 )
 
-func UpdateNextStep(cfg config, plj *packageLocalJson, status *Status) error {
+func updateNextStep(cfg config, plj *packageLocalJson, status *status) error {
 	// function from package.go uses methods to get information
-	resultversion, err := Versionchecker(cfg, plj)
+	resultversion, err := versionchecker(cfg, plj)
 	if err != nil {
 		return fmt.Errorf("Error checking version %w\n", err)
 	}
 
-	if resultversion.IsUpdateAvailable() {
-		fmt.Println(resultversion.GetMessage())
-		fmt.Printf("New version available: %s\n", resultversion.GetLatestVersion())
-		fmt.Printf("Download: %s\n", resultversion.GetDownloadURL())
-		fmt.Printf("Release notes: %s\n", resultversion.GetReleaseNotes())
+	if resultversion.isUpdateAvailable() {
+		fmt.Println(resultversion.getMessage())
+		fmt.Printf("New version available: %s\n", resultversion.getLatestVersion())
+		fmt.Printf("Download: %s\n", resultversion.getDownloadURL())
+		fmt.Printf("Release notes: %s\n", resultversion.getReleaseNotes())
 	} else {
-		return errors.New(resultversion.GetMessage())
+		return errors.New(resultversion.getMessage())
 	}
 
 	// confirmation part if there is a update
@@ -39,7 +39,7 @@ func UpdateNextStep(cfg config, plj *packageLocalJson, status *Status) error {
 	if response == "Y" || response == "y" || response == "" ||
 		response == "Yes" || response == "yes" {
 
-		err := NextStepSetup(cfg, resultversion, plj, status)
+		err := nextStepSetup(cfg, resultversion, plj, status, nil)
 		if err != nil {
 			return fmt.Errorf("Error NextStepWebApp setup %w\n", err)
 		}

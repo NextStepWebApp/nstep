@@ -31,26 +31,26 @@ type nextStep struct {
 
 // Methods for local package json calling
 
-func (plj packageLocalJson) GetRequiredDirs() []string {
+func (plj packageLocalJson) getRequiredDirs() []string {
 	return plj.NextStep.RequiredDirs
 }
 
-func (plj packageLocalJson) GetRemote() string {
+func (plj packageLocalJson) getRemote() string {
 	return plj.NextStep.Remote
 }
 
-func (plj packageLocalJson) GetVersion() string {
+func (plj packageLocalJson) getVersion() string {
 	return plj.NextStep.Version
 }
-func (plj packageLocalJson) Getname() string {
+func (plj packageLocalJson) getname() string {
 	return plj.NextStep.Name
 }
 
-func (plj packageLocalJson) GetLocalWebpath() string {
+func (plj packageLocalJson) getLocalWebpath() string {
 	return plj.NextStep.Web
 }
 
-func (plj packageLocalJson) GetNextStepInstallScript() string {
+func (plj packageLocalJson) getNextStepInstallScript() string {
 	return plj.NextStep.InstallScript
 }
 
@@ -67,45 +67,45 @@ type versionCheck struct {
 
 // Method calls for versionstuct
 
-func (vc versionCheck) GetCurrentVersion() string {
+func (vc versionCheck) getCurrentVersion() string {
 	return vc.CurrentVersion
 }
 
-func (vc versionCheck) GetLatestVersion() string {
+func (vc versionCheck) getLatestVersion() string {
 	return vc.LatestVersion
 }
 
-func (vc versionCheck) IsUpdateAvailable() bool {
+func (vc versionCheck) isUpdateAvailable() bool {
 	return vc.UpdateAvailable
 }
 
-func (vc versionCheck) GetMessage() string {
+func (vc versionCheck) getMessage() string {
 	return vc.Message
 }
 
-func (vc versionCheck) GetDownloadURL() string {
+func (vc versionCheck) getDownloadURL() string {
 	return vc.DownloadURL
 }
 
-func (vc versionCheck) GetReleaseNotes() string {
+func (vc versionCheck) getReleaseNotes() string {
 	return vc.ReleaseNotes
 }
 
-func (vc versionCheck) GetChecksum() string {
+func (vc versionCheck) getChecksum() string {
 	return vc.Checksum
 }
 
-func Localpackageupdater(plj *packageLocalJson, resultversion *versionCheck, cfg config) error {
+func localpackageupdater(plj *packageLocalJson, resultversion *versionCheck, cfg config) error {
 	var err error
-	plj.NextStep.Version = resultversion.GetLatestVersion()
-	fmt.Printf("==> Updating local system %s -> %s\n", resultversion.GetCurrentVersion(), resultversion.GetLatestVersion())
+	plj.NextStep.Version = resultversion.getLatestVersion()
+	fmt.Printf("==> Updating local system %s -> %s\n", resultversion.getCurrentVersion(), resultversion.getLatestVersion())
 
 	updatedLocalPackage, err := json.MarshalIndent(plj, "", "\t")
 	if err != nil {
 		return fmt.Errorf("%w", err)
 	}
 
-	err = os.WriteFile(cfg.GetPackagePath(), updatedLocalPackage, 0664)
+	err = os.WriteFile(cfg.getPackagePath(), updatedLocalPackage, 0664)
 	if err != nil {
 		return fmt.Errorf("%w", err)
 	}
@@ -115,10 +115,10 @@ func Localpackageupdater(plj *packageLocalJson, resultversion *versionCheck, cfg
 
 // This function gets the local version and remote project version
 // And then compares them to see if a new version came out
-func Versionchecker(cfg config, plj *packageLocalJson) (*versionCheck, error) {
+func versionchecker(cfg config, plj *packageLocalJson) (*versionCheck, error) {
 	// The local package json is loaded in main by loadlocal package function in this file
 	// Get the url to see the version of the project
-	remotePackageUrl := plj.GetRemote()
+	remotePackageUrl := plj.getRemote()
 	response, err := http.Get(remotePackageUrl)
 	if err != nil {
 		return nil, fmt.Errorf("cannot fetch remote version: %w", err)
@@ -135,7 +135,7 @@ func Versionchecker(cfg config, plj *packageLocalJson) (*versionCheck, error) {
 		return nil, fmt.Errorf("cannot decode remote package.json: %w", err)
 	}
 
-	localVersion := plj.GetVersion()
+	localVersion := plj.getVersion()
 	onlineVersion := packageOnlineItem.Version
 
 	// Create result struct

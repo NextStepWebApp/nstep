@@ -6,8 +6,8 @@ import (
 )
 
 // function that is called in main to unlock nstep
-func UnlockNstep(cfg config) error {
-	lockfilepath := cfg.GetLockFilePath()
+func unlockNstep(cfg config) error {
+	lockfilepath := cfg.getLockFilePath()
 
 	err := os.Remove(lockfilepath)
 	if err != nil {
@@ -23,8 +23,8 @@ func UnlockNstep(cfg config) error {
 }
 
 // This is function that would be called from for example update.go
-func LockNstep(cfg config) (*os.File, error) {
-	lockfilepath := cfg.GetLockFilePath()
+func lockNstep(cfg config) (*os.File, error) {
+	lockfilepath := cfg.getLockFilePath()
 
 	// This line is a 2 in 1, if it does not exist the file will be created
 	// If it does exist it gives a error

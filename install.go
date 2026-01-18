@@ -6,22 +6,22 @@ import (
 	"os/exec"
 )
 
-func InstallNextStep(plj *packageLocalJson, cfg config, status *Status) error {
+func installNextStep(plj *packageLocalJson, cfg config, status *status) error {
 	var err error
 
 	// The same process as in update.go but the local version is just v0.0.0
-	resultversion, err := Versionchecker(cfg, plj)
+	resultversion, err := versionchecker(cfg, plj)
 	if err != nil {
 		return fmt.Errorf("Error checking version %w\n", err)
 	}
-	err = NextStepSetup(cfg, resultversion, plj, status)
+	err = nextStepSetup(cfg, resultversion, plj, status, nil)
 	if err != nil {
 		return fmt.Errorf("Error NextStepWebApp setup %w\n", err)
 	}
 
 	// Run the setup_nextstep.sh script
 	// This is for manipulating files and starting services
-	installScript := plj.GetNextStepInstallScript()
+	installScript := plj.getNextStepInstallScript()
 	cmd := exec.Command("bash", installScript)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
