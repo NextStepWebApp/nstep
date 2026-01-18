@@ -110,7 +110,12 @@ func main() {
 		err = SudoPowerChecker()
 		PowerHandler(err)
 
-		fmt.Println("Removing nextstep")
+		err = RollbackNextStep(cfg)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+
 	case "unlock":
 
 		// Check if running as root
