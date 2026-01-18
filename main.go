@@ -105,6 +105,12 @@ func main() {
 		PowerHandler(err)
 
 		fmt.Println("rollbacker")
+	case "remove":
+		// check if running as root
+		err = SudoPowerChecker()
+		PowerHandler(err)
+
+		fmt.Println("Removing nextstep")
 	case "unlock":
 
 		// Check if running as root
@@ -144,7 +150,8 @@ func printUsage() {
 	fmt.Println()
 	fmt.Println("Commands:")
 	fmt.Println("	install      install the nextstep webapp")
-	fmt.Println("	update       Update NextStep to latest version")
+	fmt.Println("	update       Update nextstep to latest version")
 	fmt.Println("	rollback     Rollback to previous version")
-	fmt.Println("	unlock       Clear stuck update lock")
+	fmt.Println("	unlock       Clear stuck nstep lock")
+	fmt.Println("   remove       Remove the nextstep webapp")
 }
