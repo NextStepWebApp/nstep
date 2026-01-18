@@ -211,11 +211,17 @@ func nextstepPermissionManager(plj *packageLocalJson) error {
 	}
 
 	for _, dir := range dirs {
+		// Chown the directory itself first
+		err = os.Chown(dir, uid, gid)
+		if err != nil {
+			return fmt.Errorf("Error changing ownership of directory %s: %w", dir, err)
+		}
 		err = nextstepPermissionHelper(dir, uid, gid)
 		if err != nil {
 			return fmt.Errorf("%w", err)
 		}
 	}
+
 	return nil
 }
 
