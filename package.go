@@ -98,7 +98,7 @@ func (vc versionCheck) GetChecksum() string {
 func Localpackageupdater(plj *packageLocalJson, resultversion *versionCheck, cfg config) error {
 	var err error
 	plj.NextStep.Version = resultversion.GetLatestVersion()
-	fmt.Printf("==> Updating local system %s -> %s", resultversion.GetCurrentVersion(), resultversion.GetLatestVersion())
+	fmt.Printf("==> Updating local system %s -> %s\n", resultversion.GetCurrentVersion(), resultversion.GetLatestVersion())
 
 	updatedLocalPackage, err := json.MarshalIndent(plj, "", "\t")
 	if err != nil {
