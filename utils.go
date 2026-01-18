@@ -177,13 +177,15 @@ func Downloadpackage(url, filepath string) (message string, err error) {
 	return "Download completed successfully", nil
 }
 
-func Extractpackage(targzpath, destdir string) (message string, err error) {
+func Extractpackage(targzpath, destdir string, striplevel int) (message string, err error) {
 	if err := os.MkdirAll(destdir, 0755); err != nil {
 		return "", fmt.Errorf("cannot create destination directory %w\n", err)
 	}
 
 	//cmd := exec.Command("tar", "-xzf", targzpath, "-C", destdir)
-	cmd := exec.Command("tar", "-xzf", targzpath, "-C", destdir, "--strip-components=1")
+	strip := fmt.Sprintf("--strip-components=%d", striplevel)
+
+	cmd := exec.Command("tar", "-xzf", targzpath, "-C", destdir, strip)
 	if err := cmd.Run(); err != nil {
 		return "", fmt.Errorf("cannot extract tar.gz %w\n", err)
 	}

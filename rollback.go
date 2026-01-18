@@ -53,7 +53,7 @@ func RollbackNextStep(cfg config) error {
 	// Version to backup
 	restorePath := fmt.Sprintf("%s/%s", cfg.GetBackupPath(), versions[num])
 
-	_, err = Extractpackage(restorePath, os.TempDir())
+	_, err = Extractpackage(restorePath, os.TempDir(), 0)
 	if err != nil {
 		return fmt.Errorf("cannot extract %s %w\n", restorePath, err)
 	}

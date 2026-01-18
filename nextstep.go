@@ -86,7 +86,7 @@ func NextStepSetup(cfg config, resultversion *versionCheck, plj *packageLocalJso
 	filename = fmt.Sprintf("nextstep_%s", resultversion.LatestVersion) // also used in currentfilepath
 	versionfilepath := fmt.Sprintf("%s/%s", versionpath, filename)
 
-	message, err = Extractpackage(downloadfilepath, versionfilepath)
+	message, err = Extractpackage(downloadfilepath, versionfilepath, 1)
 	if err != nil {
 		return fmt.Errorf("Error extracting package %w: ", err)
 	}
