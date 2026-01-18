@@ -6,9 +6,9 @@
     "install_script": "/opt/nstep/setup_nextstep.sh",
     "webpath": "/srv/http/NextStep",
     "required_dirs": [
-      "/var/lib/nextstepwebapp/",
-      "/opt/nextstepwebapp/",
-      "/etc/nextstepwebapp/"
+      "/var/lib/nextstepwebapp",
+      "/opt/nextstepwebapp",
+      "/etc/nextstepwebapp"
     ]
   }
 }

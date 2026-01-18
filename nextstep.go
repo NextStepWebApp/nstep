@@ -161,10 +161,59 @@ func NextStepSetup(cfg config, resultversion *versionCheck, plj *packageLocalJso
 		fmt.Printf("Removed: %s\n", dir)
 	}
 
-	//err = updatemove(resultversion, plj, cfg)
-	// get the current code and move to web portal
-	// Update backs up the db (so db is seperate between update)
-	// New db gets updated by scripts if needed
+	// Now give all the stuff the correct permssion and ownership
+	// Get the uid, gid for the chown function
+
+	return nil
+}
+
+func nextstepPermissionHelper(dir string) error {
+
+	// Get the uid and gid of http for chown
+	uid, gid, err := GetUidGid("http")
+	fmt.Printf("uid: %d\ngid: %d\n", uid, gid)
+	if err != nil {
+		return fmt.Errorf("Error get uid gid %w\n", err)
+	}
+
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return fmt.Errorf("cannot read directory %s: %w", dir, err)
+	}
+
+	for _, entry := range entries {
+
+		path := fmt.Sprintf("%s/%s", dir, entry.Name())
+
+		if entry.IsDir() {
+			// recurssion to also give chown in dirs
+			if err := nextstepPermissionHelper(path); err != nil {
+				return err
+			} else {
+				err = os.Chown(path, uid, gid)
+				if err != nil {
+					return fmt.Errorf("Error changing ownership of %s %w\n", dir, err)
+				}
+
+			}
+		}
+	}
+
+	return nil
+}
+
+func nextstepPermissionManager(plj packageLocalJson) error {
+	// The nextstepCreate function has to run first to make sure
+	// that the required dirs are created
+	var err error
+	dirs := plj.GetRequiredDirs()
+
+	for _, dir := range dirs {
+		err = nextstepPermissionHelper(dir)
+		if err != nil {
+			return fmt.Errorf("%w", err)
+		}
+	}
 	return nil
 }
 
@@ -185,17 +234,6 @@ func nextStepCreate(plj packageLocalJson) error {
 			if err != nil {
 				return fmt.Errorf("cannot create directory %s %w\n", dir, err)
 			}
-		}
-
-		// Get the uid, gid for the chown function
-		uid, gid, err := GetUidGid("http")
-		fmt.Printf("uid: %d\ngid: %d\n", uid, gid)
-		if err != nil {
-			return fmt.Errorf("Error get uid gid %w\n", err)
-		}
-		err = os.Chown(dir, uid, gid)
-		if err != nil {
-			return fmt.Errorf("Error changing ownership of %s %w\n", dir, err)
 		}
 
 	}
