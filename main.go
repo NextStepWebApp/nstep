@@ -153,5 +153,5 @@ func printUsage() {
 	fmt.Println("	update       Update nextstep to latest version")
 	fmt.Println("	rollback     Rollback to previous version")
 	fmt.Println("	unlock       Clear stuck nstep lock")
-	fmt.Println("   remove       Remove the nextstep webapp")
+	fmt.Println("	remove       Remove the nextstep webapp")
 }
