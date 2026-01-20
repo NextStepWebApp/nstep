@@ -149,7 +149,7 @@ func setupMovesRollback(currentfilepath string) error {
 
 		fmt.Printf("dirname: %s\n", dirName)
 
-		realName := strings.ReplaceAll(entry.Name(), "-", "/")
+		realName := fmt.Sprintf("/%s", strings.ReplaceAll(entry.Name(), "-", "/"))
 
 		fmt.Printf("realname: %s\n", realName)
 
