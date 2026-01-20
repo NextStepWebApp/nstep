@@ -59,8 +59,8 @@ func rollbackNextStep(cfg config, plj *packageLocalJson, status *status) error {
 	}
 
 	// Name of the extracted directory
-	cleanName := regexVersion(versions[num])
-	tempDir := fmt.Sprintf("%s/%s", os.TempDir(), cleanName)
+	cleanChosenName := regexVersion(versions[num])
+	tempDir := fmt.Sprintf("%s/%s", os.TempDir(), cleanChosenName)
 	fmt.Println(tempDir)
 
 	// rollback does not need the all the information in versioncheck so make a custom one
@@ -69,6 +69,7 @@ func rollbackNextStep(cfg config, plj *packageLocalJson, status *status) error {
 
 	resultversion := &versionCheck{
 		CurrentVersion: plj.getVersion(),
+		LatestVersion:  cleanChosenName,
 	}
 
 	err = nextStepSetup(cfg, resultversion, plj, status, &tempDir)
