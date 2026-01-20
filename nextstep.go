@@ -146,7 +146,12 @@ func setupMovesRollback(currentfilepath string) error {
 	for _, entry := range entries {
 
 		dirName := fmt.Sprintf("%s/%s", currentfilepath, entry.Name())
+
+		fmt.Printf("dirname: %s\n", dirName)
+
 		realName := strings.ReplaceAll(entry.Name(), "-", "/")
+
+		fmt.Printf("realname: %s\n", realName)
 
 		err = copyDir(dirName, realName)
 		if err != nil {
