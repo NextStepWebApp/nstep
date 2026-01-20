@@ -17,6 +17,9 @@ func rollbackNextStep(cfg config, plj *packageLocalJson, status *status) error {
 	if err != nil {
 		return fmt.Errorf("cannot read %s %w", cfg.getBackupPath(), err)
 	}
+	if len(entries) < 1 {
+		return fmt.Errorf("no backups to rollback to")
+	}
 
 	versions := make([]string, 0, 5)
 
