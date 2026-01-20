@@ -33,7 +33,7 @@ func rollbackNextStep(cfg config, plj *packageLocalJson, status *status) error {
 		fmt.Printf("%d  nextstep/%s\n", i, cleanName)
 	}
 
-	fmt.Println(":: Select version to rollback:")
+	fmt.Println("\n:: Select version to rollback:")
 	fmt.Print(":: ")
 
 	reader := bufio.NewReader(os.Stdin)
