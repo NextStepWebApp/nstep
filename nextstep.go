@@ -113,8 +113,6 @@ func nextStepSetup(cfg config, resultversion *versionCheck, plj *packageLocalJso
 		return fmt.Errorf("Error copy current to webpath %w\n", err)
 	}
 
-	fmt.Println("Debug for rollback")
-
 	// Move all the files to there places
 	moves := [][2]string{
 		{"/srv/http/NextStep/config/nextstep_config.json", "/etc/nextstepwebapp/nextstep_config.json"},
@@ -134,8 +132,6 @@ func nextStepSetup(cfg config, resultversion *versionCheck, plj *packageLocalJso
 		}
 		fmt.Printf("Moved: %s -> %s\n", move[0], move[1])
 	}
-
-	fmt.Println("Debug after moves")
 
 	// Remove some dirs
 	dirsToRemove := []string{

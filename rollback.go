@@ -73,6 +73,9 @@ func rollbackNextStep(cfg config, plj *packageLocalJson, status *status) error {
 	}
 
 	err = nextStepSetup(cfg, resultversion, plj, status, &tempDir)
+	if err != nil {
+		return fmt.Errorf("Error NextStepWebApp setup %w\n", err)
+	}
 
 	return nil
 }
