@@ -135,6 +135,8 @@ func nextStepSetup(cfg config, resultversion *versionCheck, plj *packageLocalJso
 		fmt.Printf("Moved: %s -> %s\n", move[0], move[1])
 	}
 
+	fmt.Println("Debug after moves")
+
 	// Remove some dirs
 	dirsToRemove := []string{
 		"/srv/http/NextStep/config",
