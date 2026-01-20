@@ -63,10 +63,15 @@ func rollbackNextStep(cfg config, plj *packageLocalJson, status *status) error {
 	tempDir := fmt.Sprintf("%s/%s", os.TempDir(), cleanName)
 	fmt.Println(tempDir)
 
-	// rollback does not need the versioncheck like install and update, so that's why
-	// I justed pased a nil, the part where the versioncheck is used is also skipped in
-	// the function for rollback, so it is not needed
-	err = nextStepSetup(cfg, nil, plj, status, &tempDir)
+	// rollback does not need the all the information in versioncheck so make a custom one
+	// The nextstepsetup function requires the resultversion.getCurrentVersion()
+	// So the currentversion
+
+	resultversion := &versionCheck{
+		CurrentVersion: plj.getVersion(),
+	}
+
+	err = nextStepSetup(cfg, resultversion, plj, status, &tempDir)
 
 	return nil
 }
