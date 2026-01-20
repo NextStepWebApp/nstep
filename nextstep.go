@@ -96,6 +96,7 @@ func nextStepSetup(cfg config, resultversion *versionCheck, plj *packageLocalJso
 	}
 
 	// Name the currentfilepath for rollback
+	// sourceDir is passed throug the function
 	if commandStatus == "rollback" {
 		currentfilepath = *sourceDir
 	}
@@ -106,13 +107,13 @@ func nextStepSetup(cfg config, resultversion *versionCheck, plj *packageLocalJso
 		return fmt.Errorf("%w", err)
 	}
 
-	// Do something about the tmp dir
-
 	// get the current version to the web portal
 	err = copyDir(currentfilepath, plj.getLocalWebpath())
 	if err != nil {
 		return fmt.Errorf("Error copy current to webpath %w\n", err)
 	}
+
+	fmt.Println("Debug for rollback")
 
 	// Move all the files to there places
 	moves := [][2]string{

@@ -10,7 +10,7 @@ func installNextStep(plj *packageLocalJson, cfg config, status *status) error {
 	var err error
 
 	// The same process as in update.go but the local version is just v0.0.0
-	resultversion, err := versionchecker(cfg, plj)
+	resultversion, err := versionchecker(plj)
 	if err != nil {
 		return fmt.Errorf("Error checking version %w\n", err)
 	}

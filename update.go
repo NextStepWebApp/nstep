@@ -10,7 +10,7 @@ import (
 
 func updateNextStep(cfg config, plj *packageLocalJson, status *status) error {
 	// function from package.go uses methods to get information
-	resultversion, err := versionchecker(cfg, plj)
+	resultversion, err := versionchecker(plj)
 	if err != nil {
 		return fmt.Errorf("Error checking version %w\n", err)
 	}

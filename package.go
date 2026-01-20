@@ -115,7 +115,7 @@ func localpackageupdater(plj *packageLocalJson, resultversion *versionCheck, cfg
 
 // This function gets the local version and remote project version
 // And then compares them to see if a new version came out
-func versionchecker(cfg config, plj *packageLocalJson) (*versionCheck, error) {
+func versionchecker(plj *packageLocalJson) (*versionCheck, error) {
 	// The local package json is loaded in main by loadlocal package function in this file
 	// Get the url to see the version of the project
 	remotePackageUrl := plj.getRemote()
