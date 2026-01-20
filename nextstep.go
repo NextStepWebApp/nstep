@@ -95,69 +95,64 @@ func nextStepSetup(cfg config, resultversion *versionCheck, plj *packageLocalJso
 		}
 	}
 
-	// Name the currentfilepath for rollback
-	// sourceDir is passed throug the function
-	if commandStatus == "rollback" {
-		currentfilepath = *sourceDir
-	}
-
 	// Create or recreate the nextstep structure (destroyed by the renames!)
 	err = nextStepCreate(*plj)
 	if err != nil {
 		return fmt.Errorf("%w", err)
 	}
 
-	// get the current version to the web portal
-	err = copyDir(currentfilepath, plj.getLocalWebpath())
-	if err != nil {
-		return fmt.Errorf("Error copy current to webpath %w\n", err)
-	}
+	// Move changes between update/install and rollback
 
-	// Move all the files to there places
-	moves := [][2]string{
-		{"/srv/http/NextStep/config/nextstep_config.json", "/etc/nextstepwebapp/nextstep_config.json"},
-		{"/srv/http/NextStep/config/branding.json", "/var/lib/nextstepwebapp/branding.json"},
-		{"/srv/http/NextStep/config/config.json", "/var/lib/nextstepwebapp/config.json"},
-		{"/srv/http/NextStep/config/theme.json", "/var/lib/nextstepwebapp/theme.json"},
-		{"/srv/http/NextStep/config/errors.json", "/var/lib/nextstepwebapp/errors.json"},
-		{"/srv/http/NextStep/config/setup.json", "/var/lib/nextstepwebapp/setup.json"},
-		{"/srv/http/NextStep/data/import.py", "/opt/nextstepwebapp/import.py"},
-	}
-
-	// Execute all moves
-	for _, move := range moves {
-		err := moveFile(move[0], move[1])
+	// Setup moves for install and update
+	switch commandStatus {
+	case "update", "install":
+		// get the current version to the web portal
+		err = copyDir(currentfilepath, plj.getLocalWebpath())
 		if err != nil {
-			return fmt.Errorf("Error moving file %w\n", err)
+			return fmt.Errorf("cannot copy current to webpath %w", err)
 		}
-		fmt.Printf("Moved: %s -> %s\n", move[0], move[1])
-	}
-
-	// Remove some dirs
-	dirsToRemove := []string{
-		"/srv/http/NextStep/config",
-		"/srv/http/NextStep/data",
-	}
-
-	// Remove directories
-	for _, dir := range dirsToRemove {
-		err := removeDir(dir)
+		// put the config files etc in the right place and remove unused files in the web portal
+		err = setupMovesUpdateInstall(plj)
 		if err != nil {
-			return fmt.Errorf("Error removing directory %s %w", dir, err)
+			return fmt.Errorf("cannot do the setup moves %w", err)
 		}
-		fmt.Printf("Removed: %s\n", dir)
-	}
+	case "rollback":
+		// Name the currentfilepath for rollback
+		// sourceDir is passed throug the function
+		currentfilepath = *sourceDir
+		err = setupMovesRollback(currentfilepath)
+		if err != nil {
+			return fmt.Errorf("cannot do the setup moves %w", err)
+		}
 
-	// Now give all the stuff the correct permssion and ownership
-	err = nextstepPermissionManager(plj)
-	if err != nil {
-		return fmt.Errorf("%w", err)
 	}
 
 	// Now update the version in the local package.json
 	err = localpackageupdater(plj, resultversion, cfg)
 	if err != nil {
 		return fmt.Errorf("Error updating local package %w", err)
+	}
+
+	return nil
+}
+
+func setupMovesRollback(currentfilepath string) error {
+
+	entries, err := os.ReadDir(currentfilepath)
+	if err != nil {
+		return fmt.Errorf("cannot read %s %w", currentfilepath, err)
+	}
+
+	for _, entry := range entries {
+
+		dirName := fmt.Sprintf("%s/%s", currentfilepath, entry.Name())
+		realName := strings.ReplaceAll(entry.Name(), "-", "/")
+
+		err = copyDir(dirName, realName)
+		if err != nil {
+			return fmt.Errorf("%w", err)
+		}
+
 	}
 
 	return nil
@@ -212,6 +207,53 @@ func onlineToLocal(cfg config, resultversion *versionCheck) (string, error) {
 		return "", fmt.Errorf("Error symlinking %w", err)
 	}
 	return currentfilepath, nil
+}
+
+func setupMovesUpdateInstall(plj *packageLocalJson) error {
+	var err error
+
+	// Move all the files to there places
+	moves := [][2]string{
+		{"/srv/http/NextStep/config/nextstep_config.json", "/etc/nextstepwebapp/nextstep_config.json"},
+		{"/srv/http/NextStep/config/branding.json", "/var/lib/nextstepwebapp/branding.json"},
+		{"/srv/http/NextStep/config/config.json", "/var/lib/nextstepwebapp/config.json"},
+		{"/srv/http/NextStep/config/theme.json", "/var/lib/nextstepwebapp/theme.json"},
+		{"/srv/http/NextStep/config/errors.json", "/var/lib/nextstepwebapp/errors.json"},
+		{"/srv/http/NextStep/config/setup.json", "/var/lib/nextstepwebapp/setup.json"},
+		{"/srv/http/NextStep/data/import.py", "/opt/nextstepwebapp/import.py"},
+	}
+
+	// Execute all moves
+	for _, move := range moves {
+		err := moveFile(move[0], move[1])
+		if err != nil {
+			return fmt.Errorf("Error moving file %w\n", err)
+		}
+		fmt.Printf("Moved: %s -> %s\n", move[0], move[1])
+	}
+
+	// Remove some dirs
+	dirsToRemove := []string{
+		"/srv/http/NextStep/config",
+		"/srv/http/NextStep/data",
+	}
+
+	// Remove directories
+	for _, dir := range dirsToRemove {
+		err := removeDir(dir)
+		if err != nil {
+			return fmt.Errorf("Error removing directory %s %w", dir, err)
+		}
+		fmt.Printf("Removed: %s\n", dir)
+	}
+
+	// Now give all the stuff the correct permssion and ownership
+	err = nextstepPermissionManager(plj)
+	if err != nil {
+		return fmt.Errorf("%w", err)
+	}
+
+	return nil
 }
 
 func nextstepPermissionHelper(dir string, uid, gid int) error {
