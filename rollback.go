@@ -24,6 +24,10 @@ func rollbackNextStep(cfg config, plj *packageLocalJson, status *status) error {
 		versions = append(versions, entry.Name())
 	}
 
+	// ui printing starts here
+
+	fmt.Printf(":: Current version: %s\n\n", plj.getVersion())
+
 	for i, version := range versions {
 		cleanName := regexVersion(version)
 		fmt.Printf("%d  nextstep/%s\n", i, cleanName)
