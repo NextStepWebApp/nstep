@@ -127,6 +127,12 @@ func nextStepSetup(cfg config, resultversion *versionCheck, plj *packageLocalJso
 
 	}
 
+	// Now give all the stuff the correct permssion and ownership
+	err = nextstepPermissionManager(plj)
+	if err != nil {
+		return fmt.Errorf("%w", err)
+	}
+
 	// Now update the version in the local package.json
 	err = localpackageupdater(plj, resultversion, cfg)
 	if err != nil {
@@ -215,7 +221,6 @@ func onlineToLocal(cfg config, resultversion *versionCheck) (string, error) {
 }
 
 func setupMovesUpdateInstall(plj *packageLocalJson) error {
-	var err error
 
 	// Move all the files to there places
 	moves := [][2]string{
@@ -250,12 +255,6 @@ func setupMovesUpdateInstall(plj *packageLocalJson) error {
 			return fmt.Errorf("Error removing directory %s %w", dir, err)
 		}
 		fmt.Printf("Removed: %s\n", dir)
-	}
-
-	// Now give all the stuff the correct permssion and ownership
-	err = nextstepPermissionManager(plj)
-	if err != nil {
-		return fmt.Errorf("%w", err)
 	}
 
 	return nil
