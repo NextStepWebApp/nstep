@@ -79,11 +79,24 @@ func nextStepSetup(cfg config, resultversion *versionCheck, plj *packageLocalJso
 	defer lockfile.Close()
 	defer os.Remove(cfg.getLockFilePath())
 
+	// End of preperation
+	//
+	//
+	// Start CORE
+
 	var currentfilepath string
 	if commandStatus == "install" || commandStatus == "update" {
 		currentfilepath, err = onlineToLocal(cfg, resultversion)
 		if err != nil {
 			return fmt.Errorf("%w", err)
+		}
+
+		if commandStatus == "install" {
+			// Create or recreate the nextstep structure
+			err = nextStepCreate(*plj)
+			if err != nil {
+				return fmt.Errorf("%w", err)
+			}
 		}
 	}
 
@@ -93,12 +106,6 @@ func nextStepSetup(cfg config, resultversion *versionCheck, plj *packageLocalJso
 		if err != nil {
 			return fmt.Errorf("%w", err)
 		}
-	}
-
-	// Create or recreate the nextstep structure (destroyed by the renames!)
-	err = nextStepCreate(*plj)
-	if err != nil {
-		return fmt.Errorf("%w", err)
 	}
 
 	// Move changes between update/install and rollback
@@ -112,7 +119,7 @@ func nextStepSetup(cfg config, resultversion *versionCheck, plj *packageLocalJso
 			return fmt.Errorf("cannot copy current to webpath %w", err)
 		}
 		// put the config files etc in the right place and remove unused files in the web portal
-		err = setupMovesUpdateInstall(plj)
+		err = setupMovesUpdateInstall()
 		if err != nil {
 			return fmt.Errorf("cannot do the setup moves %w", err)
 		}
@@ -140,6 +147,8 @@ func nextStepSetup(cfg config, resultversion *versionCheck, plj *packageLocalJso
 	}
 
 	return nil
+
+	// END
 }
 
 func setupMovesRollback(currentfilepath string) error {
@@ -220,7 +229,7 @@ func onlineToLocal(cfg config, resultversion *versionCheck) (string, error) {
 	return currentfilepath, nil
 }
 
-func setupMovesUpdateInstall(plj *packageLocalJson) error {
+func setupMovesUpdateInstall() error {
 
 	// Move all the files to there places
 	moves := [][2]string{
@@ -357,7 +366,15 @@ func nextStepBackup(cfg config, resultversion *versionCheck, plj packageLocalJso
 		cleanPath := filepath.Clean(dir)
 		safeName := strings.ReplaceAll(strings.Trim(cleanPath, "/"), "/", "-")
 		name = fmt.Sprintf("%s/%s", versionbackup, safeName)
-		err = os.Rename(dir, name)
+
+		// So what it does is:
+		// var dir is like essential dirs in the config where config files are
+		// var name is the location where to save the config files
+		// Like /var/lib/backup/v0.1.12/etc-nextstepwebapp
+
+		// Before I had rename, but this in a way resets the web app
+		// So it needs to be copy
+		err = copyDir(dir, name)
 		if err != nil {
 			return fmt.Errorf("cannot backup %s %w", dir, err)
 		}
@@ -384,6 +401,7 @@ func nextStepBackup(cfg config, resultversion *versionCheck, plj packageLocalJso
 	}
 
 	// Now remove the normal backup folder
+	// So the leftover uncompressed folder
 	err = os.RemoveAll(versionbackup)
 	if err != nil {
 		return fmt.Errorf("cannot remove %s %w\n", versionbackup, err)
