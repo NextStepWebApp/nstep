@@ -141,6 +141,9 @@ func main() {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
+
+	case "status":
+		statusNextStep(plj)
 	case "remove":
 		// check if running as root
 		err = sudoPowerChecker()
@@ -186,9 +189,10 @@ func printUsage() {
 	fmt.Println("	nstep <command>")
 	fmt.Println()
 	fmt.Println("Commands:")
-	fmt.Println("	install      install the nextstep webapp")
+	fmt.Println("	install      Install the nextstep webapp")
 	fmt.Println("	update       Update nextstep to latest version")
 	fmt.Println("	rollback     Rollback to previous version")
+	fmt.Println("	status     	 See the current version")
 	fmt.Println("	unlock       Clear stuck nstep lock")
 	fmt.Println("	remove       Remove the nextstep webapp")
 }
