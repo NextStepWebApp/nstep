@@ -89,26 +89,32 @@ func onlineToLocal(cfg config, resultversion *versionCheck) (string, error) {
 	return currentfilepath, nil
 }
 
-func setupMovesUpdateInstall() error {
-
-	// Move all the files to there places
-	moves := [][2]string{
-		{"/srv/http/NextStep/config/nextstep_config.json", "/etc/nextstepwebapp/nextstep_config.json"},
-		{"/srv/http/NextStep/config/branding.json", "/var/lib/nextstepwebapp/branding.json"},
-		{"/srv/http/NextStep/config/config.json", "/var/lib/nextstepwebapp/config.json"},
-		{"/srv/http/NextStep/config/theme.json", "/var/lib/nextstepwebapp/theme.json"},
-		{"/srv/http/NextStep/config/errors.json", "/var/lib/nextstepwebapp/errors.json"},
-		{"/srv/http/NextStep/config/setup.json", "/var/lib/nextstepwebapp/setup.json"},
-		{"/srv/http/NextStep/data/import.py", "/opt/nextstepwebapp/import.py"},
+func setupMovesInstallUpdate(commandStatus string) error {
+	// Safty check
+	if commandStatus != "install" && commandStatus != "update" {
+		return fmt.Errorf("internal code error, wrong use of function")
 	}
 
-	// Execute all moves
-	for _, move := range moves {
-		err := moveFile(move[0], move[1])
-		if err != nil {
-			return fmt.Errorf("Error moving file %w\n", err)
+	if commandStatus == "install" {
+		// Move all the files to there places
+		moves := [][2]string{
+			{"/srv/http/NextStep/config/nextstep_config.json", "/etc/nextstepwebapp/nextstep_config.json"},
+			{"/srv/http/NextStep/config/branding.json", "/var/lib/nextstepwebapp/branding.json"},
+			{"/srv/http/NextStep/config/config.json", "/var/lib/nextstepwebapp/config.json"},
+			{"/srv/http/NextStep/config/theme.json", "/var/lib/nextstepwebapp/theme.json"},
+			{"/srv/http/NextStep/config/errors.json", "/var/lib/nextstepwebapp/errors.json"},
+			{"/srv/http/NextStep/config/setup.json", "/var/lib/nextstepwebapp/setup.json"},
+			{"/srv/http/NextStep/data/import.py", "/opt/nextstepwebapp/import.py"},
 		}
-		fmt.Printf("Moved: %s -> %s\n", move[0], move[1])
+
+		// Execute all moves
+		for _, move := range moves {
+			err := moveFile(move[0], move[1])
+			if err != nil {
+				return fmt.Errorf("Error moving file %w\n", err)
+			}
+			fmt.Printf("Moved: %s -> %s\n", move[0], move[1])
+		}
 	}
 
 	// Remove some dirs

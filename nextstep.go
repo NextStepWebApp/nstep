@@ -80,56 +80,71 @@ func nextStepSetup(cfg config, resultversion *versionCheck, plj *packageLocalJso
 	//
 	//
 	// Start CORE
-
-	var currentfilepath string
-	if commandStatus == "install" || commandStatus == "update" {
-		currentfilepath, err = onlineToLocal(cfg, resultversion)
-		if err != nil {
-			return fmt.Errorf("%w", err)
-		}
-
-		if commandStatus == "install" {
-			// Create or recreate the nextstep structure
-			err = nextStepCreate(*plj)
-			if err != nil {
-				return fmt.Errorf("%w", err)
-			}
-		}
-	}
-
-	// Run extra update and rollback stuff
-	if commandStatus == "update" || commandStatus == "rollback" {
-		err = nextStepBackup(cfg, resultversion, *plj)
-		if err != nil {
-			return fmt.Errorf("%w", err)
-		}
-	}
-
-	// Move changes between update/install and rollback
-
-	// Setup moves for install and update
 	switch commandStatus {
-	case "update", "install":
+	case "install":
+		currentfilepath, err := onlineToLocal(cfg, resultversion)
+		if err != nil {
+			return fmt.Errorf("%w", err)
+		}
+
+		// Create or recreate the nextstep structure
+		err = nextStepCreate(*plj)
+		if err != nil {
+			return fmt.Errorf("%w", err)
+		}
+
 		// get the current version to the web portal
 		err = copyDir(currentfilepath, plj.getLocalWebpath())
 		if err != nil {
 			return fmt.Errorf("cannot copy current to webpath %w", err)
 		}
+
 		// put the config files etc in the right place and remove unused files in the web portal
-		err = setupMovesUpdateInstall()
+		err = setupMovesInstallUpdate("install")
 		if err != nil {
 			return fmt.Errorf("cannot do the setup moves %w", err)
 		}
-	case "rollback":
-		// Name the currentfilepath for rollback
-		// sourceDir is passed throug the function
-		currentfilepath = *sourceDir
-		err = setupMovesRollback(currentfilepath)
+	case "update":
+		currentfilepath, err := onlineToLocal(cfg, resultversion)
+		if err != nil {
+			return fmt.Errorf("%w", err)
+		}
+
+		err = nextStepBackup(cfg, resultversion, *plj)
+		if err != nil {
+			return fmt.Errorf("%w", err)
+		}
+
+		// get the current version to the web portal
+		err = copyDir(currentfilepath, plj.getLocalWebpath())
+		if err != nil {
+			return fmt.Errorf("cannot copy current to webpath %w", err)
+		}
+		err = setupMovesInstallUpdate("update")
 		if err != nil {
 			return fmt.Errorf("cannot do the setup moves %w", err)
 		}
 
+	case "rollback":
+		err = nextStepBackup(cfg, resultversion, *plj)
+		if err != nil {
+			return fmt.Errorf("%w", err)
+		}
+
+		// Name the currentfilepath for rollback
+		// sourceDir is passed throug the function
+		currentfilepath := *sourceDir
+		err = setupMovesRollback(currentfilepath)
+		if err != nil {
+			return fmt.Errorf("cannot do the setup moves %w", err)
+		}
+	default:
+		return fmt.Errorf("internal code error")
+
 	}
+	// END CORE
+
+	// Finishing touches
 
 	// Now give all the stuff the correct permssion and ownership
 	err = nextstepPermissionManager(plj)
@@ -145,5 +160,4 @@ func nextStepSetup(cfg config, resultversion *versionCheck, plj *packageLocalJso
 
 	return nil
 
-	// END
 }
