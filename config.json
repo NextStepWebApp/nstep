@@ -7,6 +7,7 @@
     "nstepversionpath": "/var/lib/nstep/versions",
     "nstepcurrentpath": "/var/lib/nstep/current",
     "nstepbackuppath": "/var/lib/nstep/backup",
-    "lockfile": "/var/lib/nstep/nstep.lock"
+    "lockfile": "/var/lib/nstep/nstep.lock",
+    "statefile": "/var/lib/nstep/state.json"
   }
 }
