@@ -1,6 +1,7 @@
 {
   "packages": {
-    "file_path": "/etc/nstep/package.json"
+    "file_path": "/etc/nstep/package.json",
+    "setup_file": "/etc/nstep/setup.json"
   },
   "nstep": {
     "nstepdownloadpath": "/var/lib/nstep/downloads",

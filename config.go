@@ -13,7 +13,8 @@ type config struct {
 }
 
 type packageconfig struct {
-	FilePath string `json:"file_path"`
+	FilePath  string `json:"file_path"`
+	SetupFile string `json:"setup_file"`
 }
 
 type nstepjson struct {
@@ -22,9 +23,18 @@ type nstepjson struct {
 	NstepCurrentPath  string `json:"nstepcurrentpath"`
 	NstepBackupPath   string `json:"nstepbackuppath"`
 	Lockfile          string `json:"lockfile"`
+	StateFile         string `json:"statefile"`
 }
 
 // Functions to get specific info from the json
+
+func (c config) getSetupFile() string {
+	return c.Packages.SetupFile
+}
+
+func (c config) getStateFile() string {
+	return c.Nstep.StateFile
+}
 
 func (c config) getBackupPath() string {
 	return c.Nstep.NstepBackupPath
