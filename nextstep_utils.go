@@ -43,7 +43,7 @@ func onlineToLocal(cfg config, resultversion *versionCheck) (string, error) {
 	var filename, message string
 	// format filepath to store download
 	downloadpath := cfg.getDownloadPath()
-	filename = fmt.Sprintf("nextstep_%s.tar.gz", resultversion.getLatestVersion())
+	filename = fmt.Sprintf("nextstep_%s.tar.gz", resultversion.getLatestWebAppVersion())
 	downloadfilepath := fmt.Sprintf("%s/%s", downloadpath, filename)
 
 	message, err = downloadpackage(resultversion.getDownloadURL(), downloadfilepath)
@@ -65,7 +65,7 @@ func onlineToLocal(cfg config, resultversion *versionCheck) (string, error) {
 
 	// Extract the downloaded package, function from package.go
 	versionpath := cfg.getVersionPath()
-	filename = fmt.Sprintf("nextstep_%s", resultversion.LatestVersion) // also used in currentfilepath
+	filename = fmt.Sprintf("nextstep_%s", resultversion.getLatestWebAppVersion()) // also used in currentfilepath
 	versionfilepath := fmt.Sprintf("%s/%s", versionpath, filename)
 
 	message, err = extractpackage(downloadfilepath, versionfilepath, 1)
@@ -105,6 +105,7 @@ func setupMovesInstallUpdate(commandStatus string) error {
 			{"/srv/http/NextStep/config/errors.json", "/var/lib/nextstepwebapp/errors.json"},
 			{"/srv/http/NextStep/config/setup.json", "/var/lib/nextstepwebapp/setup.json"},
 			{"/srv/http/NextStep/data/import.py", "/opt/nextstepwebapp/import.py"},
+			// In updates only data needs to be updated so replaced
 		}
 
 		// Execute all moves
@@ -219,7 +220,7 @@ func nextStepBackup(cfg config, resultversion *versionCheck, plj packageLocalJso
 	var name string
 
 	// make the version directory
-	versionbackup := fmt.Sprintf("%s/%s", cfg.getBackupPath(), resultversion.getCurrentVersion())
+	versionbackup := fmt.Sprintf("%s/%s", cfg.getBackupPath(), resultversion.getCurrentWebAppVersion())
 	err = os.MkdirAll(versionbackup, 0755)
 	if err != nil {
 		return fmt.Errorf("cannot make %s %w", versionbackup, err)
@@ -261,7 +262,7 @@ func nextStepBackup(cfg config, resultversion *versionCheck, plj packageLocalJso
 	tarballPath := fmt.Sprintf("%s.tar.gz", versionbackup)
 
 	// Create tarball
-	cmd := exec.Command("tar", "-czf", tarballPath, "-C", cfg.getBackupPath(), resultversion.getCurrentVersion())
+	cmd := exec.Command("tar", "-czf", tarballPath, "-C", cfg.getBackupPath(), resultversion.getCurrentWebAppVersion())
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("failed to create tarball: %w\n", err)
 	}

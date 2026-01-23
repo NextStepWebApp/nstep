@@ -6,7 +6,7 @@ import (
 )
 
 // The sourceDir is only meant for the rollback functionality
-func nextStepSetup(cfg config, resultversion *versionCheck, plj *packageLocalJson, status *status, sourceDir *string) error {
+func nextStepSetup(cfg config, resultversion *versionCheck, plj *packageLocalJson, state *state, status *status, sourceDir *string) error {
 	var err error
 
 	// Safty check to see if this is a install or update
@@ -152,10 +152,10 @@ func nextStepSetup(cfg config, resultversion *versionCheck, plj *packageLocalJso
 		return fmt.Errorf("%w", err)
 	}
 
-	// Now update the version in the local package.json
-	err = localpackageupdater(plj, resultversion, cfg)
+	// Now update the state
+	err = saveState(plj, cfg, resultversion, state)
 	if err != nil {
-		return fmt.Errorf("Error updating local package %w", err)
+		return fmt.Errorf("%w", err)
 	}
 
 	return nil

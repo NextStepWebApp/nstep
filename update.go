@@ -8,20 +8,29 @@ import (
 	"strings"
 )
 
-func updateNextStep(cfg config, plj *packageLocalJson, status *status) error {
+func updateNextStep(cfg config, plj *packageLocalJson, state *state, status *status) error {
 	// function from package.go uses methods to get information
-	resultversion, err := versionchecker(plj)
+	resultversion, err := versionchecker(plj, state, cfg)
 	if err != nil {
 		return fmt.Errorf("Error checking version %w\n", err)
 	}
 
-	if resultversion.isUpdateAvailable() {
-		fmt.Println(resultversion.getMessage())
-		fmt.Printf("New version available: %s\n", resultversion.getLatestVersion())
+	// Check for package.json update
+	if resultversion.isUpdatePackageAvailable() {
+		fmt.Println(resultversion.getMessagePackage())
+		fmt.Printf("New %s version available: %d\n", getPackageName(cfg), resultversion.getLatestPackageVersion())
+		fmt.Printf("Download: %s\n", resultversion.getPackageURL())
+	} else {
+		return fmt.Errorf("%s", resultversion.getMessagePackage())
+	}
+
+	if resultversion.isUpdateWebAppAvailable() {
+		fmt.Println(resultversion.getMessageWebApp())
+		fmt.Printf("New %s version available: %s\n", plj.getname(), resultversion.getLatestWebAppVersion())
 		fmt.Printf("Download: %s\n", resultversion.getDownloadURL())
 		fmt.Printf("Release notes: %s\n", resultversion.getReleaseNotes())
 	} else {
-		return errors.New(resultversion.getMessage())
+		return errors.New(resultversion.getMessageWebApp())
 	}
 
 	// confirmation part if there is a update
@@ -39,7 +48,7 @@ func updateNextStep(cfg config, plj *packageLocalJson, status *status) error {
 	if response == "Y" || response == "y" || response == "" ||
 		response == "Yes" || response == "yes" {
 
-		err := nextStepSetup(cfg, resultversion, plj, status, nil)
+		err := nextStepSetup(cfg, resultversion, plj, state, status, nil)
 		if err != nil {
 			return fmt.Errorf("Error NextStepWebApp setup %w\n", err)
 		}

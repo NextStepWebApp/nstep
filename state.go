@@ -8,7 +8,7 @@ import (
 )
 
 type state struct {
-	InstalledVersion        string    `json:"installed_version"`
+	InstalledWebAppVersion  string    `json:"installed_version"`
 	InstalledPackageVersion int       `json:"installed_package_version"`
 	LastUpdate              time.Time `json:"last_update"`
 	InstallationDate        time.Time `json:"installation_date"`
@@ -16,8 +16,8 @@ type state struct {
 
 // Methods for the state struct
 
-func (s *state) getInstalledVersion() string {
-	return s.InstalledVersion
+func (s *state) getInstalledWebAppVersion() string {
+	return s.InstalledWebAppVersion
 }
 
 func (s *state) getInstalledPackageVersion() int {
@@ -39,8 +39,9 @@ func loadState(cfg config) (*state, error) {
 		if os.IsNotExist(err) {
 			// First install - return default state
 			return &state{
-				InstalledVersion:        "v0.0.0",
+				InstalledWebAppVersion:  "v0.0.0",
 				InstalledPackageVersion: 0,
+				LastUpdate:              time.Now(),
 				InstallationDate:        time.Now(),
 			}, nil
 		}
@@ -59,7 +60,26 @@ func loadState(cfg config) (*state, error) {
 	return stateItem, nil
 }
 
-func saveState(cfg config, state *state) error {
+func saveState(plj *packageLocalJson, cfg config, resultversion *versionCheck, state *state) error {
+	var err error
+
+	if resultversion.isUpdatePackageAvailable() {
+
+		state.InstalledPackageVersion = resultversion.getLatestPackageVersion()
+		fmt.Printf("==> Updating local %s system %d -> %d\n", getPackageName(cfg),
+			resultversion.getCurrentPackageVersion(), resultversion.getLatestPackageVersion())
+	}
+
+	if resultversion.isUpdateWebAppAvailable() {
+
+		state.InstalledWebAppVersion = resultversion.getLatestWebAppVersion()
+		fmt.Printf("==> Updating local %s system %s -> %s\n", plj.getname(),
+			resultversion.getCurrentWebAppVersion(), resultversion.getLatestWebAppVersion())
+	}
+
+	// update latest update state
+	state.LastUpdate = time.Now()
+
 	data, err := json.MarshalIndent(state, "", "  ")
 	if err != nil {
 		return fmt.Errorf("cannot marshal state: %w", err)

@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-func rollbackNextStep(cfg config, plj *packageLocalJson, status *status) error {
+func rollbackNextStep(cfg config, plj *packageLocalJson, state *state, status *status) error {
 	var err error
 
 	entries, err := os.ReadDir(cfg.getBackupPath())
@@ -29,7 +29,7 @@ func rollbackNextStep(cfg config, plj *packageLocalJson, status *status) error {
 
 	// ui printing starts here
 
-	fmt.Printf(":: Current version: %s\n\n", plj.getVersion())
+	fmt.Printf(":: Current version: %s\n\n", plj.getLocalWebpath())
 
 	for i, version := range versions {
 		cleanName := regexVersion(version)
@@ -75,11 +75,11 @@ func rollbackNextStep(cfg config, plj *packageLocalJson, status *status) error {
 	// So the currentversion
 
 	resultversion := &versionCheck{
-		CurrentVersion: plj.getVersion(),
-		LatestVersion:  cleanChosenName,
+		CurrentWebAppVersion: state.getInstalledWebAppVersion(),
+		LatestWebAppVersion:  cleanChosenName,
 	}
 
-	err = nextStepSetup(cfg, resultversion, plj, status, &tempDir)
+	err = nextStepSetup(cfg, resultversion, plj, state, status, &tempDir)
 	if err != nil {
 		return fmt.Errorf("Error NextStepWebApp setup %w\n", err)
 	}

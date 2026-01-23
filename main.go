@@ -79,11 +79,22 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Load the local package json
-	plj, err := loadlocalpackage(cfg)
+	// Load the state package json
+	state, err := loadState(cfg)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
+	}
+
+	// Load the local package json
+	plj, err := loadlocalpackage(cfg)
+	if err != nil {
+		// Setup the package
+		err = setupLocalPackage(cfg)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "cannot setup package.json", err)
+			os.Exit(1)
+		}
 	}
 
 	// Check to see if the directories exist (config.go)
@@ -111,7 +122,7 @@ func main() {
 
 		status.isInstall()
 
-		err = installNextStep(plj, cfg, status)
+		err = installNextStep(plj, cfg, state, status)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
@@ -124,7 +135,7 @@ func main() {
 
 		status.isUpdate()
 
-		err = updateNextStep(cfg, plj, status)
+		err = updateNextStep(cfg, plj, state, status)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
@@ -136,14 +147,14 @@ func main() {
 
 		status.isRollback()
 
-		err = rollbackNextStep(cfg, plj, status)
+		err = rollbackNextStep(cfg, plj, state, status)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
 
 	case "status":
-		statusNextStep(plj)
+		statusNextStep(plj, cfg, state)
 	case "remove":
 		// check if running as root
 		err = sudoPowerChecker()

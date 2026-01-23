@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"os/user"
+	"path/filepath"
 	"strconv"
 )
 
@@ -219,4 +220,9 @@ func verifyChecksum(filepathdownload, expectedChecksum string) error {
 	}
 
 	return nil
+}
+
+func getPackageName(cfg config) string {
+	namePackage := filepath.Base(cfg.getPackagePath())
+	return namePackage
 }
