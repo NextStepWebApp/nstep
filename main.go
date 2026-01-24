@@ -43,6 +43,8 @@ func main() {
 			fmt.Fprintln(os.Stderr, "cannot setup package.json", err)
 			os.Exit(1)
 		}
+		// If not exit it will move to the switch block
+		os.Exit(0)
 	}
 
 	// Load the local package json
