@@ -2,11 +2,24 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"time"
 )
 
-func statusNextStep(plj *packageLocalJson, cfg config, state *state) {
+func statusNextStep(plj *packageLocalJson, cfg config, state *state) error {
+	var err error
+
+	// Check to see if the web app is installed
+	_, err = os.ReadDir(plj.getLocalWebpath())
+	if err != nil {
+		if os.IsNotExist(err) {
+			return fmt.Errorf("%s is not installed. Run 'sudo nstep install'", plj.getname())
+		} else {
+			return fmt.Errorf("cannot check installation status: %w", err)
+		}
+	}
+
 	fmt.Println(":: Status")
 	fmt.Println(strings.Repeat("-", 20))
 
@@ -30,6 +43,8 @@ func statusNextStep(plj *packageLocalJson, cfg config, state *state) {
 		state.LastUpdate.Format("Jan 02, 2006"),
 		humanDuration(state.LastUpdate),
 	)
+
+	return nil
 }
 
 func humanDuration(from time.Time) string {

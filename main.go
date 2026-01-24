@@ -104,7 +104,11 @@ func main() {
 		}
 
 	case "status":
-		statusNextStep(plj, cfg, state)
+		err = statusNextStep(plj, cfg, state)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
 	case "remove":
 		// check if running as root
 		err = sudoPowerChecker()
