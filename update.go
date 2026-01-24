@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -14,23 +13,29 @@ func updateNextStep(cfg config, plj *packageLocalJson, state *state, status *sta
 	if err != nil {
 		return fmt.Errorf("Error checking version %w\n", err)
 	}
-
+	updateCount := 0
 	// Check for package.json update
 	if resultversion.isUpdatePackageAvailable() {
+		updateCount++
 		fmt.Println(resultversion.getMessagePackage())
 		fmt.Printf("New %s version available: %d\n", getPackageName(cfg), resultversion.getLatestPackageVersion())
 		fmt.Printf("Download: %s\n", resultversion.getPackageURL())
 	} else {
-		return fmt.Errorf("%s", resultversion.getMessagePackage())
+		fmt.Println(resultversion.getMessagePackage())
 	}
 
 	if resultversion.isUpdateWebAppAvailable() {
+		updateCount++
 		fmt.Println(resultversion.getMessageWebApp())
 		fmt.Printf("New %s version available: %s\n", plj.getname(), resultversion.getLatestWebAppVersion())
 		fmt.Printf("Download: %s\n", resultversion.getDownloadURL())
 		fmt.Printf("Release notes: %s\n", resultversion.getReleaseNotes())
 	} else {
-		return errors.New(resultversion.getMessageWebApp())
+		fmt.Println(resultversion.getMessageWebApp())
+	}
+
+	if updateCount == 0 {
+		os.Exit(0)
 	}
 
 	// confirmation part if there is a update
