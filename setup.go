@@ -18,6 +18,11 @@ type setup struct {
 func setupLocalPackage(cfg config) error {
 	var err error
 
+	// Check to see if the command whas already executed
+	if _, err = os.Stat(cfg.getPackagePath()); err == nil {
+		return fmt.Errorf("Already initialized")
+	}
+
 	setupFile, err := os.Open(cfg.getSetupFile())
 	if err != nil {
 		return fmt.Errorf("cannot open setup file %w", err)
@@ -48,3 +53,16 @@ func setupLocalPackage(cfg config) error {
 	fmt.Println("===> Package build setup completed successfully")
 	return nil
 }
+
+/*
+// Function called to make sure the package.json is set up
+func packageGuard(cfg config) error {
+	var err error
+
+	// Check to see if init was already executed
+	if _, err = os.Stat(cfg.getPackagePath()); err != nil {
+		return fmt.Errorf("not initialized. Run 'sudo nstep init'")
+	}
+	return nil
+}
+*/
