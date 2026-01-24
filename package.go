@@ -171,6 +171,7 @@ func versionchecker(plj *packageLocalJson, state *state, cfg config) (*versionCh
 		PackageURL:            packageOnlineItem.PackageUrl,
 		ReleaseNotes:          packageOnlineItem.ReleaseNotes,
 		Checksum:              packageOnlineItem.Checksum,
+		Message:               make([]string, 2),
 	}
 
 	// Compare the versions of the package.json to see if there is a update needed
