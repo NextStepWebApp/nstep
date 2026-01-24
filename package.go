@@ -56,7 +56,7 @@ func (plj packageLocalJson) getRemote() string {
 	return plj.NextStep.Remote
 }
 
-func (plj packageLocalJson) getname() string {
+func (plj packageLocalJson) getName() string {
 	return plj.NextStep.Name
 }
 
@@ -191,7 +191,7 @@ func versionchecker(plj *packageLocalJson, state *state, cfg config) (*versionCh
 	if localWebAppVersion == onlineWebAppVersion {
 		result.UpdateWebAppAvailable = false
 
-		result.Message[1] = fmt.Sprintf("%s is already up to date (%s)", plj.getname(), localWebAppVersion)
+		result.Message[1] = fmt.Sprintf("%s is already up to date (%s)", plj.getName(), localWebAppVersion)
 	} else {
 		result.UpdateWebAppAvailable = true
 		result.Message[1] = fmt.Sprintf("Update available: %s -> %s", localWebAppVersion, onlineWebAppVersion)

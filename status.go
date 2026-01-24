@@ -14,7 +14,7 @@ func statusNextStep(plj *packageLocalJson, cfg config, state *state) error {
 	_, err = os.ReadDir(plj.getLocalWebpath())
 	if err != nil {
 		if os.IsNotExist(err) {
-			return fmt.Errorf("%s is not installed. Run 'sudo nstep install'", plj.getname())
+			return fmt.Errorf("%s is not installed. Run 'sudo nstep install'", plj.getName())
 		} else {
 			return fmt.Errorf("cannot check installation status: %w", err)
 		}
@@ -23,7 +23,7 @@ func statusNextStep(plj *packageLocalJson, cfg config, state *state) error {
 	fmt.Println(":: Status")
 	fmt.Println(strings.Repeat("-", 20))
 
-	fmt.Printf("%-18s %s\n", plj.getname()+" version:", state.getInstalledWebAppVersion())
+	fmt.Printf("%-18s %s\n", plj.getName()+" version:", state.getInstalledWebAppVersion())
 	fmt.Printf("%-18s %d\n", getPackageName(cfg)+" version:", state.getInstalledPackageVersion())
 
 	fmt.Println("\n:: Timeline")

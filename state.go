@@ -73,7 +73,7 @@ func saveState(plj *packageLocalJson, cfg config, resultversion *versionCheck, s
 	if resultversion.isUpdateWebAppAvailable() {
 
 		state.InstalledWebAppVersion = resultversion.getLatestWebAppVersion()
-		fmt.Printf("==> Updating local %s system %s -> %s\n", plj.getname(),
+		fmt.Printf("==> Updating local %s system %s -> %s\n", plj.getName(),
 			resultversion.getCurrentWebAppVersion(), resultversion.getLatestWebAppVersion())
 	}
 

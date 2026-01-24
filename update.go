@@ -27,7 +27,7 @@ func updateNextStep(cfg config, plj *packageLocalJson, state *state, status *sta
 	if resultversion.isUpdateWebAppAvailable() {
 		updateCount++
 		fmt.Println(resultversion.getMessageWebApp())
-		fmt.Printf("New %s version available: %s\n", plj.getname(), resultversion.getLatestWebAppVersion())
+		fmt.Printf("New %s version available: %s\n", plj.getName(), resultversion.getLatestWebAppVersion())
 		fmt.Printf("Download: %s\n", resultversion.getDownloadURL())
 		fmt.Printf("Release notes: %s\n", resultversion.getReleaseNotes())
 	} else {
