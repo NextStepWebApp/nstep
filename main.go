@@ -29,6 +29,22 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Get the command and error handling
+	command, err := getCommand(os.Args[1:])
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+
+	if command == "init" {
+		// Setup the package
+		err = setupLocalPackage(cfg)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "cannot setup package.json", err)
+			os.Exit(1)
+		}
+	}
+
 	// Load the local package json
 	plj, err := loadlocalpackage(cfg)
 	if err != nil {
@@ -44,14 +60,6 @@ func main() {
 		sudoPowerChecker()
 		powerHandler(err)
 	}
-
-	// Get the command and error handling
-	command, err := getCommand(os.Args[1:])
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
-	}
-
 	// nstep commands
 	switch command {
 
@@ -113,13 +121,6 @@ func main() {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
-	case "init":
-		// Setup the package
-		err = setupLocalPackage(cfg)
-		if err != nil {
-			fmt.Fprintln(os.Stderr, "cannot setup package.json", err)
-			os.Exit(1)
-		}
 
 	case "help", "--help", "-h":
 		printUsage()
@@ -148,7 +149,6 @@ func printUsage() {
 	fmt.Println("	nstep <command>")
 	fmt.Println()
 	fmt.Println("Commands:")
-	fmt.Println("   init         Setup the nstep package manager")
 	fmt.Println("	install      Install the nextstep webapp")
 	fmt.Println("	update       Update nextstep to latest version")
 	fmt.Println("	rollback     Rollback to previous version")
