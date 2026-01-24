@@ -10,63 +10,6 @@ const (
 	nstepconfigfile = "/etc/nstep/config.json"
 )
 
-// Store the status of the command
-type status struct {
-	install  bool
-	update   bool
-	rollback bool
-}
-
-func (s *status) isUpdate() {
-	s.update = true
-}
-
-func (s *status) isInstall() {
-	s.install = true
-}
-
-func (s *status) isRollback() {
-	s.rollback = true
-}
-
-func (s *status) getStatus() (string, error) {
-	// Count how many statuses are true
-	trueCount := 0
-	if s.install {
-		trueCount++
-	}
-	if s.update {
-		trueCount++
-	}
-	if s.rollback {
-		trueCount++
-	}
-
-	// Error if multiple statuses are set
-	if trueCount > 1 {
-		return "", fmt.Errorf("multiple statuses are set: install=%v, update=%v, rollback=%v",
-			s.install, s.update, s.rollback)
-	}
-
-	// Error if no status is set
-	if trueCount == 0 {
-		return "", fmt.Errorf("no status is set")
-	}
-
-	// Return the single true status
-	if s.install {
-		return "install", nil
-	}
-	if s.update {
-		return "update", nil
-	}
-	if s.rollback {
-		return "rollback", nil
-	}
-
-	return "", fmt.Errorf("unexpected error")
-}
-
 func main() {
 	var err error
 
@@ -89,12 +32,9 @@ func main() {
 	// Load the local package json
 	plj, err := loadlocalpackage(cfg)
 	if err != nil {
-		// Setup the package
-		err = setupLocalPackage(cfg)
-		if err != nil {
-			fmt.Fprintln(os.Stderr, "cannot setup package.json", err)
-			os.Exit(1)
-		}
+		fmt.Println("Run 'sudo nstep init'")
+		fmt.Fprintln(os.Stderr, "cannot load package.json", err)
+		os.Exit(1)
 	}
 
 	// Check to see if the directories exist (config.go)
@@ -173,6 +113,14 @@ func main() {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
+	case "init":
+		// Setup the package
+		err = setupLocalPackage(cfg)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "cannot setup package.json", err)
+			os.Exit(1)
+		}
+
 	case "help", "--help", "-h":
 		printUsage()
 		os.Exit(0)
@@ -200,10 +148,68 @@ func printUsage() {
 	fmt.Println("	nstep <command>")
 	fmt.Println()
 	fmt.Println("Commands:")
+	fmt.Println("   init         Setup the nstep package manager")
 	fmt.Println("	install      Install the nextstep webapp")
 	fmt.Println("	update       Update nextstep to latest version")
 	fmt.Println("	rollback     Rollback to previous version")
 	fmt.Println("	status     	 See the current version")
 	fmt.Println("	unlock       Clear stuck nstep lock")
 	fmt.Println("	remove       Remove the nextstep webapp")
+}
+
+// Store the status of the command
+type status struct {
+	install  bool
+	update   bool
+	rollback bool
+}
+
+func (s *status) isUpdate() {
+	s.update = true
+}
+
+func (s *status) isInstall() {
+	s.install = true
+}
+
+func (s *status) isRollback() {
+	s.rollback = true
+}
+
+func (s *status) getStatus() (string, error) {
+	// Count how many statuses are true
+	trueCount := 0
+	if s.install {
+		trueCount++
+	}
+	if s.update {
+		trueCount++
+	}
+	if s.rollback {
+		trueCount++
+	}
+
+	// Error if multiple statuses are set
+	if trueCount > 1 {
+		return "", fmt.Errorf("multiple statuses are set: install=%v, update=%v, rollback=%v",
+			s.install, s.update, s.rollback)
+	}
+
+	// Error if no status is set
+	if trueCount == 0 {
+		return "", fmt.Errorf("no status is set")
+	}
+
+	// Return the single true status
+	if s.install {
+		return "install", nil
+	}
+	if s.update {
+		return "update", nil
+	}
+	if s.rollback {
+		return "rollback", nil
+	}
+
+	return "", fmt.Errorf("unexpected error")
 }
