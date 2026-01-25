@@ -82,13 +82,13 @@ func nextStepSetup(cfg config, resultversion *versionCheck, plj *packageLocalJso
 	// Start CORE
 	switch commandStatus {
 	case "install":
-		currentfilepath, err := updateAllComponents(cfg, plj, resultversion)
+		/*currentfilepath, err := updateAllComponents(cfg, plj, resultversion)
 		if err != nil {
 			return fmt.Errorf("%w", err)
 		}
-
+		*/
 		fmt.Println("Benchmark test")
-		currentfilepath, err = updateAllComponentsSequential(cfg, resultversion)
+		currentfilepath, err := updateAllComponentsSequential(cfg, resultversion)
 		if err != nil {
 			return fmt.Errorf("%w", err)
 		}
