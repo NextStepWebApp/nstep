@@ -38,7 +38,7 @@ func main() {
 
 	if command == "init" {
 		// Setup the package
-		err = setupLocalPackage(cfg)
+		err = initLocalPackage(cfg)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, "cannot setup package.json", err)
 			os.Exit(1)

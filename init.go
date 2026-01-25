@@ -7,7 +7,7 @@ import (
 )
 
 // struct for the setup.json
-type setup struct {
+type initPackage struct {
 	ProjectName string `json:"project_name"`
 	VersionUrl  string `json:"version_url"`
 }
@@ -15,7 +15,7 @@ type setup struct {
 // This function gets the version url of the remote project
 // At the beginning that does not exits so get it from that
 // and after delete the install.json (no longer needed)
-func setupLocalPackage(cfg config) error {
+func initLocalPackage(cfg config) error {
 	var err error
 
 	// Check to see if the command whas already executed
@@ -30,7 +30,7 @@ func setupLocalPackage(cfg config) error {
 	defer setupFile.Close()
 
 	// Get the information
-	setupItem := setup{}
+	setupItem := initPackage{}
 	decoder := json.NewDecoder(setupFile)
 	decoder.DisallowUnknownFields()
 
