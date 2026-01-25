@@ -22,13 +22,12 @@ type packageLocalJson struct {
 }
 
 type nextStep struct {
-	Name           string     `json:"name"`
-	PackageVersion int        `json:"package_version"`
-	Remote         string     `json:"remote_project"`
-	InstallScript  string     `json:"install_script"`
-	Web            string     `json:"webpath"`
-	RequiredDirs   []string   `json:"required_dirs"`
-	Operations     operations `json:"operations"`
+	Name          string     `json:"name"`
+	Remote        string     `json:"remote_project"`
+	InstallScript string     `json:"install_script"`
+	Web           string     `json:"webpath"`
+	RequiredDirs  []string   `json:"required_dirs"`
+	Operations    operations `json:"operations"`
 }
 
 type operations struct {
@@ -42,12 +41,14 @@ type operationDetails struct {
 }
 
 type moveAction struct {
-	From string `json:"from"`
-	To   string `json:"to"`
+	From        string `json:"from"`
+	To          string `json:"to"`
+	Owner       string `json:"owner"`
+	Group       string `json:"group"`
+	Permissions string `json:"permissions"`
 }
 
 // Methods for local package json calling
-
 func (plj packageLocalJson) getRequiredDirs() []string {
 	return plj.NextStep.RequiredDirs
 }
@@ -66,6 +67,24 @@ func (plj packageLocalJson) getLocalWebpath() string {
 
 func (plj packageLocalJson) getNextStepInstallScript() string {
 	return plj.NextStep.InstallScript
+}
+
+// Operation methods of package.json (local package)
+
+func (plj packageLocalJson) getUpdateRemoves() []string {
+	return plj.NextStep.Operations.Update.Removes
+}
+
+func (plj packageLocalJson) getInstallRemoves() []string {
+	return plj.NextStep.Operations.Install.Removes
+}
+
+func (plj packageLocalJson) getUpdateMoveActions() []moveAction {
+	return plj.NextStep.Operations.Update.Moves
+}
+
+func (plj packageLocalJson) getInstallMoveActions() []moveAction {
+	return plj.NextStep.Operations.Install.Moves
 }
 
 // To store information for version checker
