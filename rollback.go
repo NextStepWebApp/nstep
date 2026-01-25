@@ -60,7 +60,7 @@ func rollbackNextStep(cfg config, plj *packageLocalJson, state *state, status *s
 	// Version to restore
 	restorePath := fmt.Sprintf("%s/%s", cfg.getBackupPath(), versions[num])
 
-	_, err = extractpackage(restorePath, os.TempDir(), 0)
+	err = extractpackage(restorePath, os.TempDir(), 0)
 	if err != nil {
 		return fmt.Errorf("cannot extract %s %w\n", restorePath, err)
 	}

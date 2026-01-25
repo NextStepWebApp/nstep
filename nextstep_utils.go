@@ -41,7 +41,7 @@ func setupMovesRollback(currentfilepath string) error {
 }
 
 // Manager function that orchestrates the concurrency
-func updateAllComponents(cfg config, resultversion *versionCheck) (currentwebpath string, err error) {
+func updateAllComponents(cfg config, plj *packageLocalJson, resultversion *versionCheck) (currentwebpath string, err error) {
 	startNow := time.Now()
 
 	ch := make(chan string)
@@ -61,7 +61,7 @@ func updateAllComponents(cfg config, resultversion *versionCheck) (currentwebpat
 	if resultversion.isUpdateWebAppAvailable() {
 		wg.Add(1)
 		go func() {
-			path, err := onlineToLocalWebApp(cfg, resultversion, ch, &wg)
+			path, err := onlineToLocalWebApp(cfg, plj, resultversion, ch, &wg)
 			if err != nil {
 				errCh <- err
 			} else {
@@ -107,7 +107,7 @@ func onlineToLocalPackage(cfg config, resultversion *versionCheck, ch chan<- str
 	packageUrl := resultversion.getPackageURL()
 	packagePath := cfg.getPackagePath()
 
-	_, err = downloadpackage(packageUrl, packagePath)
+	err = downloadpackage(packageUrl, packagePath)
 	if err != nil {
 		return fmt.Errorf("cannot download %s to %s %w", packageUrl, packagePath, err)
 	}
@@ -117,42 +117,40 @@ func onlineToLocalPackage(cfg config, resultversion *versionCheck, ch chan<- str
 	return nil
 }
 
-func onlineToLocalWebApp(cfg config, resultversion *versionCheck, ch chan<- string, wg *sync.WaitGroup) (string, error) {
+func onlineToLocalWebApp(cfg config, plj *packageLocalJson, resultversion *versionCheck, ch chan<- string, wg *sync.WaitGroup) (string, error) {
 	defer wg.Done()
 
 	var err error
-	var filename, message string
+	var filename string
 	// format filepath to store download
 	downloadpath := cfg.getDownloadPath()
 	filename = fmt.Sprintf("nextstep_%s.tar.gz", resultversion.getLatestWebAppVersion())
 	downloadfilepath := fmt.Sprintf("%s/%s", downloadpath, filename)
 
-	message, err = downloadpackage(resultversion.getDownloadURL(), downloadfilepath)
+	err = downloadpackage(resultversion.getDownloadURL(), downloadfilepath)
 	if err != nil {
 		return "", fmt.Errorf("Error downloading package %w", err)
 	}
-
-	ch <- message
 
 	// Verifying package integrity
 
 	err = verifyChecksum(downloadfilepath, resultversion.getChecksum())
 	if err != nil {
 		return "", fmt.Errorf("Verification failed %w", err)
-	} else {
-		ch <- "Package verified successfully"
 	}
+	ch <- fmt.Sprintf("%s verified successfully", plj.getName())
 
 	// Extract the downloaded package, function from package.go
 	versionpath := cfg.getVersionPath()
 	filename = fmt.Sprintf("nextstep_%s", resultversion.getLatestWebAppVersion()) // also used in currentfilepath
 	versionfilepath := fmt.Sprintf("%s/%s", versionpath, filename)
 
-	message, err = extractpackage(downloadfilepath, versionfilepath, 1)
+	err = extractpackage(downloadfilepath, versionfilepath, 1)
 	if err != nil {
 		return "", fmt.Errorf("Error extracting package %w: ", err)
 	}
-	ch <- message
+
+	ch <- fmt.Sprintf("%s extracted successfully", plj.getName())
 
 	// Symlink the new version to the current one
 	err = emptyDir(cfg.getCurrentPath())
@@ -166,6 +164,8 @@ func onlineToLocalWebApp(cfg config, resultversion *versionCheck, ch chan<- stri
 	if err != nil {
 		return "", fmt.Errorf("Error symlinking %w", err)
 	}
+
+	ch <- fmt.Sprintf("%s downloaded successfully", plj.getName())
 
 	return currentfilepath, nil
 }
