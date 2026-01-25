@@ -6,6 +6,8 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"sync"
+	"time"
 )
 
 // This files is for all the functions that are spessifically for nextstep.go
@@ -38,7 +40,86 @@ func setupMovesRollback(currentfilepath string) error {
 	return nil
 }
 
-func onlineToLocal(cfg config, resultversion *versionCheck) (string, error) {
+// Manager function that orchestrates the concurrency
+func updateAllComponents(cfg config, resultversion *versionCheck) (currentwebpath string, err error) {
+	startNow := time.Now()
+
+	ch := make(chan string)
+	errCh := make(chan error, 2)
+	var wg sync.WaitGroup
+	var mu sync.Mutex
+	var webPath string
+
+	if resultversion.isUpdatePackageAvailable() {
+		wg.Add(1)
+		go func() {
+			if err := onlineToLocalPackage(cfg, resultversion, ch, &wg); err != nil {
+				errCh <- err
+			}
+		}()
+	}
+	if resultversion.isUpdateWebAppAvailable() {
+		wg.Add(1)
+		go func() {
+			path, err := onlineToLocalWebApp(cfg, resultversion, ch, &wg)
+			if err != nil {
+				errCh <- err
+			} else {
+				mu.Lock()
+				webPath = path
+				mu.Unlock()
+			}
+		}()
+	}
+
+	// Close channel when all goroutines are done
+	go func() {
+		wg.Wait()
+		close(ch)
+		close(errCh)
+	}()
+
+	// Print results as they come in
+	for result := range ch {
+		fmt.Println(result)
+	}
+
+	// Check for errors
+	for err := range errCh {
+		if err != nil {
+			return "", err
+		}
+	}
+
+	fmt.Printf("This operation took: %v\n", time.Since(startNow))
+
+	mu.Lock()
+	currentwebpath = webPath
+	mu.Unlock()
+
+	return currentwebpath, nil
+}
+
+func onlineToLocalPackage(cfg config, resultversion *versionCheck, ch chan<- string, wg *sync.WaitGroup) error {
+	defer wg.Done()
+
+	var err error
+	packageUrl := resultversion.getPackageURL()
+	packagePath := cfg.getPackagePath()
+
+	_, err = downloadpackage(packageUrl, packagePath)
+	if err != nil {
+		return fmt.Errorf("cannot download %s to %s %w", packageUrl, packagePath, err)
+	}
+
+	ch <- fmt.Sprintf("%s downloaded successfully", getPackageName(cfg))
+
+	return nil
+}
+
+func onlineToLocalWebApp(cfg config, resultversion *versionCheck, ch chan<- string, wg *sync.WaitGroup) (string, error) {
+	defer wg.Done()
+
 	var err error
 	var filename, message string
 	// format filepath to store download
@@ -47,20 +128,19 @@ func onlineToLocal(cfg config, resultversion *versionCheck) (string, error) {
 	downloadfilepath := fmt.Sprintf("%s/%s", downloadpath, filename)
 
 	message, err = downloadpackage(resultversion.getDownloadURL(), downloadfilepath)
-
 	if err != nil {
 		return "", fmt.Errorf("Error downloading package %w", err)
 	}
-	println(message)
+
+	ch <- message
 
 	// Verifying package integrity
 
 	err = verifyChecksum(downloadfilepath, resultversion.getChecksum())
-
 	if err != nil {
 		return "", fmt.Errorf("Verification failed %w", err)
 	} else {
-		fmt.Println("Package verified successfully")
+		ch <- "Package verified successfully"
 	}
 
 	// Extract the downloaded package, function from package.go
@@ -72,7 +152,7 @@ func onlineToLocal(cfg config, resultversion *versionCheck) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("Error extracting package %w: ", err)
 	}
-	println(message)
+	ch <- message
 
 	// Symlink the new version to the current one
 	err = emptyDir(cfg.getCurrentPath())
@@ -86,6 +166,7 @@ func onlineToLocal(cfg config, resultversion *versionCheck) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("Error symlinking %w", err)
 	}
+
 	return currentfilepath, nil
 }
 
