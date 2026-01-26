@@ -48,7 +48,6 @@ func updateAllComponents(cfg config, plj *packageLocalJson, resultversion *versi
 	errCh := make(chan error, 2)
 	var wg sync.WaitGroup
 	var mu sync.Mutex
-	var webPath string
 
 	if resultversion.isUpdatePackageAvailable() {
 		wg.Add(1)
@@ -62,11 +61,12 @@ func updateAllComponents(cfg config, plj *packageLocalJson, resultversion *versi
 		wg.Add(1)
 		go func() {
 			path, err := onlineToLocalWebApp(cfg, plj, resultversion, ch, &wg)
+
 			if err != nil {
 				errCh <- err
 			} else {
 				mu.Lock()
-				webPath = path
+				currentwebpath = path
 				mu.Unlock()
 			}
 		}()
@@ -94,8 +94,7 @@ func updateAllComponents(cfg config, plj *packageLocalJson, resultversion *versi
 	fmt.Printf("This operation took: %v\n", time.Since(startNow))
 
 	mu.Lock()
-	currentwebpath = webPath
-	mu.Unlock()
+	defer mu.Unlock()
 
 	return currentwebpath, nil
 }
