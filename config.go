@@ -18,6 +18,7 @@ type packageconfig struct {
 }
 
 type nstepjson struct {
+	NstepSettingsFile string `json:"settingsfile"`
 	NstepDownloadPath string `json:"nstepdownloadpath"`
 	NstepVersionPath  string `json:"nstepversionpath"`
 	NstepCurrentPath  string `json:"nstepcurrentpath"`
@@ -27,6 +28,10 @@ type nstepjson struct {
 }
 
 // Functions to get specific info from the json
+
+func (c config) getSettingsFile() string {
+	return c.Nstep.NstepSettingsFile
+}
 
 func (c config) getSetupFile() string {
 	return c.Packages.SetupFile

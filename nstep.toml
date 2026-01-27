@@ -1,0 +1,6 @@
+# /etc/nstep/nstep.toml
+[permissions.defaults]
+files = 0o644
+directories = 0o755
+executables = 0o755
+sensitive = 0o600

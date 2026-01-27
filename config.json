@@ -4,6 +4,7 @@
     "setup_file": "/etc/nstep/setup.json"
   },
   "nstep": {
+    "settingsfile": "/etc/nstep/nstep.toml",
     "nstepdownloadpath": "/var/lib/nstep/downloads",
     "nstepversionpath": "/var/lib/nstep/versions",
     "nstepcurrentpath": "/var/lib/nstep/current",

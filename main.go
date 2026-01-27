@@ -4,10 +4,17 @@ import (
 	"errors"
 	"fmt"
 	"os"
+
+	"github.com/fatih/color"
 )
 
 const (
 	nstepconfigfile = "/etc/nstep/config.json"
+)
+
+var (
+	yellow = color.New(color.FgYellow, color.Bold).SprintFunc()
+	red    = color.New(color.FgRed, color.Bold).SprintFunc()
 )
 
 func main() {
