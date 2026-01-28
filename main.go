@@ -29,6 +29,13 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Load the settings toml
+	settings, err := loadSettings(cfg)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+
 	// Load the state package json
 	state, err := loadState(cfg)
 	if err != nil {
@@ -79,7 +86,7 @@ func main() {
 
 		status.isInstall()
 
-		err = installNextStep(plj, cfg, state, status)
+		err = installNextStep(plj, cfg, settings, state, status)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
@@ -92,7 +99,7 @@ func main() {
 
 		status.isUpdate()
 
-		err = updateNextStep(cfg, plj, state, status)
+		err = updateNextStep(cfg, plj, settings, state, status)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
@@ -104,7 +111,7 @@ func main() {
 
 		status.isRollback()
 
-		err = rollbackNextStep(cfg, plj, state, status)
+		err = rollbackNextStep(cfg, plj, settings, state, status)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)

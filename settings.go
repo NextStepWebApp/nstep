@@ -38,21 +38,21 @@ func (s settingsConfig) getSettingsPermissionsAll() []int {
 	}
 }
 
-func loadSettings(cfg config) error {
+func loadSettings(cfg config) (settingsConfig, error) {
 	settingItem := settingsConfig{}
 
 	tomlFile := cfg.getSettingsFile()
 	if _, err := toml.DecodeFile(tomlFile, settingItem); err != nil {
-		fmt.Errorf("%s - cannot decode %s", red("ERROR"), tomlFile)
+		return settingsConfig{}, fmt.Errorf("%s - cannot decode %s", red("ERROR"), tomlFile)
 	}
 
 	for _, permission := range settingItem.getSettingsPermissionsAll() {
 		if !isValidOctalPermission(permission) {
-			fmt.Errorf("%s - wrong permission number in %s", red("ERROR"), tomlFile)
+			return settingsConfig{}, fmt.Errorf("%s - wrong permission number in %s", red("ERROR"), tomlFile)
 		}
 	}
 
-	return nil
+	return settingItem, nil
 }
 
 func isValidOctalPermission(perm int) bool {
