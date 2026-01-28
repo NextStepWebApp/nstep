@@ -125,3 +125,18 @@ func removeDir(path string) error {
 	}
 	return nil
 }
+
+// These functions, reverse and arrayToInt are used in validate.go
+func reverse[T any](arr []T) {
+	for i, j := 0, len(arr)-1; i < j; i, j = i+1, j-1 {
+		arr[i], arr[j] = arr[j], arr[i]
+	}
+}
+
+func arrayToInt(arr []int) int {
+	var result int
+	for _, digit := range arr {
+		result = result*10 + digit
+	}
+	return result
+}
