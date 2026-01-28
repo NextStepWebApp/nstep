@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-func updateNextStep(cfg config, plj *packageLocalJson, state *state, status *status) error {
+func updateNextStep(cfg config, plj *packageLocalJson, settings settingsConfig, state *state, status *status) error {
 	// function from package.go uses methods to get information
 	resultversion, err := versionchecker(plj, state, cfg)
 	if err != nil {
@@ -53,7 +53,7 @@ func updateNextStep(cfg config, plj *packageLocalJson, state *state, status *sta
 	if response == "Y" || response == "y" || response == "" ||
 		response == "Yes" || response == "yes" {
 
-		err := nextStepSetup(cfg, resultversion, plj, state, status, nil)
+		err := nextStepSetup(cfg, resultversion, plj, settings, state, status, nil)
 		if err != nil {
 			return fmt.Errorf("Error NextStepWebApp setup %w\n", err)
 		}

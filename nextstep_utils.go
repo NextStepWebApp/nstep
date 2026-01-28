@@ -47,7 +47,6 @@ func updateAllComponents(cfg config, plj *packageLocalJson, resultversion *versi
 	ch := make(chan string)
 	errCh := make(chan error, 2)
 	var wg sync.WaitGroup
-	var mu sync.Mutex
 
 	if resultversion.isUpdatePackageAvailable() {
 		wg.Add(1)
@@ -60,14 +59,10 @@ func updateAllComponents(cfg config, plj *packageLocalJson, resultversion *versi
 	if resultversion.isUpdateWebAppAvailable() {
 		wg.Add(1)
 		go func() {
-			path, err := onlineToLocalWebApp(cfg, plj, resultversion, ch, &wg)
+			currentwebpath, err = onlineToLocalWebApp(cfg, plj, resultversion, ch, &wg)
 
 			if err != nil {
 				errCh <- err
-			} else {
-				mu.Lock()
-				currentwebpath = path
-				mu.Unlock()
 			}
 		}()
 	}
@@ -87,14 +82,11 @@ func updateAllComponents(cfg config, plj *packageLocalJson, resultversion *versi
 	// Check for errors
 	for err := range errCh {
 		if err != nil {
-			return "", err
+			return "", fmt.Errorf("update components %w", err)
 		}
 	}
 
 	fmt.Printf("This operation took: %v\n", time.Since(startNow))
-
-	mu.Lock()
-	defer mu.Unlock()
 
 	return currentwebpath, nil
 }
@@ -169,39 +161,39 @@ func onlineToLocalWebApp(cfg config, plj *packageLocalJson, resultversion *versi
 	return currentfilepath, nil
 }
 
-func setupMovesInstallUpdate(commandStatus string) error {
+func setupMovesInstallUpdate(commandStatus string, plj *packageLocalJson) error {
 	// Safty check
 	if commandStatus != "install" && commandStatus != "update" {
 		return fmt.Errorf("internal code error, wrong use of function")
 	}
 
-	if commandStatus == "install" {
-		// Move all the files to there places
-		moves := [][2]string{
-			{"/srv/http/NextStep/config/nextstep_config.json", "/etc/nextstepwebapp/nextstep_config.json"},
-			{"/srv/http/NextStep/config/branding.json", "/var/lib/nextstepwebapp/branding.json"},
-			{"/srv/http/NextStep/config/config.json", "/var/lib/nextstepwebapp/config.json"},
-			{"/srv/http/NextStep/config/theme.json", "/var/lib/nextstepwebapp/theme.json"},
-			{"/srv/http/NextStep/config/errors.json", "/var/lib/nextstepwebapp/errors.json"},
-			{"/srv/http/NextStep/config/setup.json", "/var/lib/nextstepwebapp/setup.json"},
-			{"/srv/http/NextStep/data/import.py", "/opt/nextstepwebapp/import.py"},
-			// In updates only data needs to be updated so replaced
-		}
+	var moveActions []moveAction
+	var dirsToRemove []string
 
-		// Execute all moves
-		for _, move := range moves {
-			err := moveFile(move[0], move[1])
-			if err != nil {
-				return fmt.Errorf("Error moving file %w\n", err)
-			}
-			fmt.Printf("Moved: %s -> %s\n", move[0], move[1])
-		}
+	switch commandStatus {
+	case "install":
+		moveActions = plj.getInstallMoveActions()
+		dirsToRemove = plj.getInstallRemoves()
+	case "update":
+		moveActions = plj.getUpdateMoveActions()
+		dirsToRemove = plj.getUpdateRemoves()
 	}
 
-	// Remove some dirs
-	dirsToRemove := []string{
-		"/srv/http/NextStep/config",
-		"/srv/http/NextStep/data",
+	// Execute all moves
+	for _, move := range moveActions {
+		err := moveFile(move.From, move.To)
+		if err != nil {
+			return fmt.Errorf("Error moving file %w\n", err)
+		}
+
+		// Set up correct permissions
+
+		err = nextstepPermissionManager(move)
+		if err != nil {
+			return fmt.Errorf("cannot set up permission for %s %w", move.To, err)
+		}
+
+		fmt.Printf("Moved: %s -> %s\n", move.From, move.To)
 	}
 
 	// Remove directories
@@ -216,101 +208,110 @@ func setupMovesInstallUpdate(commandStatus string) error {
 	return nil
 }
 
-func nextstepPermissionHelper(dir string, uid, gid int) error {
+/*func nextstepPermissionHelper(dir string, uid, gid, permission int) error {
 
-	entries, err := os.ReadDir(dir)
-	if err != nil {
-		return fmt.Errorf("cannot read directory %s: %w", dir, err)
-	}
-
-	for _, entry := range entries {
-
-		path := fmt.Sprintf("%s/%s", dir, entry.Name())
-
-		if entry.IsDir() {
-			// recurssion to also give chown in dirs
-			if err := nextstepPermissionHelper(path, uid, gid); err != nil {
-				return err
-			}
-		} else {
-			err = os.Chown(path, uid, gid)
-			if err != nil {
-				return fmt.Errorf("Error changing ownership of %s %w\n", dir, err)
-			}
-		}
-	}
-
-	return nil
+entries, err := os.ReadDir(dir)
+if err != nil {
+	return fmt.Errorf("cannot read directory %s: %w", dir, err)
 }
 
-func nextstepPermissionManager(plj *packageLocalJson) error {
+for _, entry := range entries {
+
+	path := fmt.Sprintf("%s/%s", dir, entry.Name())
+
+	if entry.IsDir() {
+		// recurssion to also give chown in dirs
+		if err := nextstepPermissionHelper(path, uid, gid, permission); err != nil {
+			return err
+		}
+	} else {
+		err = os.Chmod(path, os.FileMode(permission))
+		if err != nil {
+			fmt.Errorf("cannot change permission of %s %w\n", dir, err)
+		}
+		err = os.Chown(path, uid, gid)
+		if err != nil {
+			return fmt.Errorf("Error changing ownership of %s %w\n", dir, err)
+		}
+	}
+}
+
+return nil
+}*/
+
+func nextstepPermissionManager(moveAction moveAction) error {
 	// The nextstepCreate function has to run first to make sure
 	// that the required dirs are created
 	var err error
-	dirs := plj.getRequiredDirs()
 
-	// Get the uid and gid of http for chown
-	uid, gid, err := getUidGid("http")
-	fmt.Printf("uid: %d\ngid: %d\n", uid, gid)
+	owner := moveAction.Owner
+	group := moveAction.Group
+	dir := moveAction.To
+	permission := moveAction.Permissions
+
+	uid, gid, err := getUidGid(owner)
 	if err != nil {
-		return fmt.Errorf("Error get uid gid %w\n", err)
+		return fmt.Errorf("cannot get uid gid for %s %w\n", owner, err)
 	}
 
-	for _, dir := range dirs {
-		// Chown the directory itself first
-		err = os.Chown(dir, uid, gid)
+	if group != owner {
+		_, gid, err = getUidGid(group)
 		if err != nil {
-			return fmt.Errorf("Error changing ownership of directory %s: %w", dir, err)
-		}
-		err = nextstepPermissionHelper(dir, uid, gid)
-		if err != nil {
-			return fmt.Errorf("%w", err)
+			return fmt.Errorf("cannot get uid gid for %s %w\n", group, err)
 		}
 	}
+
+	// Directory permissions setup
+	err = os.Chmod(dir, os.FileMode(permission))
+	if err != nil {
+		return fmt.Errorf("cannot change permission of %s %w\n", dir, err)
+	}
+	err = os.Chown(dir, uid, gid)
+	if err != nil {
+		return fmt.Errorf("cannot change ownership of directory %s %w\n", dir, err)
+
+	}
+
+	/*err = nextstepPermissionHelper(dir, uid, gid, permission)
+	if err != nil {
+		return fmt.Errorf("%w", err)
+		}*/
 
 	return nil
 }
 
-func nextStepCreate(plj packageLocalJson) error {
+func nextStepCreate(plj *packageLocalJson) error {
 	var err error
 	// Make the required directories with the write permissions and ownerships
-	dirs := plj.getRequiredDirs()
+	dirs := plj.getRequiredDirInfo()
 
 	for _, dir := range dirs {
-		if dir == "/var/lib/nextstepwebapp" {
-			err = os.MkdirAll(dir, 0775)
-			if err != nil {
-				return fmt.Errorf("cannot create directory %s %w\n", dir, err)
-			}
-
-		} else {
-			err = os.MkdirAll(dir, 0755)
-			if err != nil {
-				return fmt.Errorf("cannot create directory %s %w\n", dir, err)
-			}
+		err = os.MkdirAll(dir.Dir, os.FileMode(dir.Permission))
+		if err != nil {
+			return fmt.Errorf("cannot create directory %s %w\n", dir.Dir, err)
 		}
-
 	}
+
 	return nil
 }
 
-func nextStepBackup(cfg config, resultversion *versionCheck, plj packageLocalJson) error {
+func nextStepBackup(cfg config, resultversion *versionCheck, settings settingsConfig, plj *packageLocalJson) error {
 	// run the extra update stuff: bakup the nstep instance
 	var err error
 	var name string
 
 	// make the version directory
 	versionbackup := fmt.Sprintf("%s/%s", cfg.getBackupPath(), resultversion.getCurrentWebAppVersion())
-	err = os.MkdirAll(versionbackup, 0755)
+	err = os.MkdirAll(versionbackup, os.FileMode(settings.getSettingPermissionDir()))
 	if err != nil {
 		return fmt.Errorf("cannot make %s %w", versionbackup, err)
 	}
 
-	dirs := plj.getRequiredDirs()
+	dirs := plj.getRequiredDirInfo()
 
 	for _, dir := range dirs {
 		// make the dir name
-		cleanPath := filepath.Clean(dir)
+		cleanPath := filepath.Clean(dir.Dir)
 		safeName := strings.ReplaceAll(strings.Trim(cleanPath, "/"), "/", "-")
 		name = fmt.Sprintf("%s/%s", versionbackup, safeName)
 
@@ -321,9 +322,9 @@ func nextStepBackup(cfg config, resultversion *versionCheck, plj packageLocalJso
 
 		// Before I had rename, but this in a way resets the web app
 		// So it needs to be copy
-		err = copyDir(dir, name)
+		err = copyDir(dir.Dir, name)
 		if err != nil {
-			return fmt.Errorf("cannot backup %s %w", dir, err)
+			return fmt.Errorf("cannot backup %s %w", dir.Dir, err)
 		}
 	}
 

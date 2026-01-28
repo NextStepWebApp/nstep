@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-func rollbackNextStep(cfg config, plj *packageLocalJson, state *state, status *status) error {
+func rollbackNextStep(cfg config, plj *packageLocalJson, settings settingsConfig, state *state, status *status) error {
 	var err error
 
 	entries, err := os.ReadDir(cfg.getBackupPath())
@@ -79,7 +79,7 @@ func rollbackNextStep(cfg config, plj *packageLocalJson, state *state, status *s
 		LatestWebAppVersion:  cleanChosenName,
 	}
 
-	err = nextStepSetup(cfg, resultversion, plj, state, status, &tempDir)
+	err = nextStepSetup(cfg, resultversion, plj, settings, state, status, &tempDir)
 	if err != nil {
 		return fmt.Errorf("Error NextStepWebApp setup %w\n", err)
 	}

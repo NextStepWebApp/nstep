@@ -22,12 +22,17 @@ type packageLocalJson struct {
 }
 
 type nextStep struct {
-	Name          string     `json:"name"`
-	Remote        string     `json:"remote_project"`
-	InstallScript string     `json:"install_script"`
-	Web           string     `json:"webpath"`
-	RequiredDirs  []string   `json:"required_dirs"`
-	Operations    operations `json:"operations"`
+	Name          string            `json:"name"`
+	Remote        string            `json:"remote_project"`
+	InstallScript string            `json:"install_script"`
+	Web           string            `json:"webpath"`
+	RequiredDirs  []requiredDirInfo `json:"required_dirs"`
+	Operations    operations        `json:"operations"`
+}
+
+type requiredDirInfo struct {
+	Dir        string `json:"dir"`
+	Permission int    `json:"permission"`
 }
 
 type operations struct {
@@ -45,11 +50,11 @@ type moveAction struct {
 	To          string `json:"to"`
 	Owner       string `json:"owner"`
 	Group       string `json:"group"`
-	Permissions string `json:"permissions"`
+	Permissions int    `json:"permissions"`
 }
 
 // Methods for local package json calling
-func (plj packageLocalJson) getRequiredDirs() []string {
+func (plj packageLocalJson) getRequiredDirInfo() []requiredDirInfo {
 	return plj.NextStep.RequiredDirs
 }
 

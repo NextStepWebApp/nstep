@@ -6,7 +6,7 @@ import (
 )
 
 // The sourceDir is only meant for the rollback functionality
-func nextStepSetup(cfg config, resultversion *versionCheck, plj *packageLocalJson, state *state, status *status, sourceDir *string) error {
+func nextStepSetup(cfg config, resultversion *versionCheck, plj *packageLocalJson, settings settingsConfig, state *state, status *status, sourceDir *string) error {
 	var err error
 
 	// Safty check to see if this is a install or update
@@ -88,7 +88,7 @@ func nextStepSetup(cfg config, resultversion *versionCheck, plj *packageLocalJso
 		}
 
 		// Create or recreate the nextstep structure
-		err = nextStepCreate(*plj)
+		err = nextStepCreate(plj)
 		if err != nil {
 			return fmt.Errorf("%w", err)
 		}
@@ -100,7 +100,7 @@ func nextStepSetup(cfg config, resultversion *versionCheck, plj *packageLocalJso
 		}
 
 		// put the config files etc in the right place and remove unused files in the web portal
-		err = setupMovesInstallUpdate("install")
+		err = setupMovesInstallUpdate("install", plj)
 		if err != nil {
 			return fmt.Errorf("cannot do the setup moves %w", err)
 		}
@@ -110,7 +110,7 @@ func nextStepSetup(cfg config, resultversion *versionCheck, plj *packageLocalJso
 			return fmt.Errorf("%w", err)
 		}
 
-		err = nextStepBackup(cfg, resultversion, *plj)
+		err = nextStepBackup(cfg, resultversion, settings, plj)
 		if err != nil {
 			return fmt.Errorf("%w", err)
 		}
@@ -120,13 +120,13 @@ func nextStepSetup(cfg config, resultversion *versionCheck, plj *packageLocalJso
 		if err != nil {
 			return fmt.Errorf("cannot copy current to webpath %w", err)
 		}
-		err = setupMovesInstallUpdate("update")
+		err = setupMovesInstallUpdate("update", plj)
 		if err != nil {
 			return fmt.Errorf("cannot do the setup moves %w", err)
 		}
 
 	case "rollback":
-		err = nextStepBackup(cfg, resultversion, *plj)
+		err = nextStepBackup(cfg, resultversion, settings, plj)
 		if err != nil {
 			return fmt.Errorf("%w", err)
 		}
@@ -146,12 +146,12 @@ func nextStepSetup(cfg config, resultversion *versionCheck, plj *packageLocalJso
 
 	// Finishing touches
 
-	// Now give all the stuff the correct permssion and ownership
-	err = nextstepPermissionManager(plj)
-	if err != nil {
-		return fmt.Errorf("%w", err)
-	}
-
+	/* 	// Now give all the stuff the correct permssion and ownership
+	   	err = nextstepPermissionManager(plj.getr)
+	   	if err != nil {
+	   		return fmt.Errorf("%w", err)
+	   	}
+	*/
 	// Now update the state
 	err = saveState(plj, cfg, resultversion, state)
 	if err != nil {
