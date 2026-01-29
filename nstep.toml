@@ -1,6 +1,6 @@
 # /etc/nstep/nstep.toml
 [output]
-verbose = false
+verbose = true
 
 [permissions.defaults]
 files = 0o644
