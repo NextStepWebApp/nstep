@@ -15,6 +15,7 @@ const (
 var (
 	yellow = color.New(color.FgYellow, color.Bold).SprintFunc()
 	red    = color.New(color.FgRed, color.Bold).SprintFunc()
+	green  = color.New(color.FgGreen, color.Bold).SprintFunc()
 )
 
 func main() {
@@ -64,8 +65,7 @@ func main() {
 	// Load the local package json
 	plj, err := loadlocalpackage(cfg)
 	if err != nil {
-		fmt.Println("Run 'sudo nstep init'")
-		fmt.Fprintln(os.Stderr, "cannot load package.json", err)
+		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
 

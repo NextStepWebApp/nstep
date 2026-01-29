@@ -20,7 +20,9 @@ func loadlocalpackage(cfg config) (*packageLocalJson, error) {
 
 	jsonLocalFile, err := os.Open(packagepath)
 	if err != nil {
-		return nil, fmt.Errorf("cannot open package.json %w", err)
+		fmt.Println("Run 'sudo nstep init'")
+		return nil, fmt.Errorf("%s - cannot load package.json", red("ERROR"))
+
 	}
 	defer jsonLocalFile.Close()
 
@@ -28,7 +30,7 @@ func loadlocalpackage(cfg config) (*packageLocalJson, error) {
 	decoder := json.NewDecoder(jsonLocalFile)
 	decoder.DisallowUnknownFields()
 	if err := decoder.Decode(packageLocalItem); err != nil {
-		return nil, fmt.Errorf("cannot decode local package.json: %w", err)
+		return nil, fmt.Errorf("%s - cannot decode package.json", red("ERROR"))
 	}
 	return packageLocalItem, nil
 }

@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"os"
 )
@@ -84,12 +83,11 @@ func (c config) diravailable() error {
 	return nil
 }
 
-// Create a struct print called in main
 func loadconfig(nstepconfigfile string) (config, error) {
 
 	configfile, err := os.Open(nstepconfigfile)
 	if err != nil {
-		return config{}, errors.New("Cannot load the config.json file")
+		return config{}, fmt.Errorf("%s - cannot load the config.json file", red("ERROR"))
 	}
 	defer configfile.Close()
 
@@ -98,7 +96,7 @@ func loadconfig(nstepconfigfile string) (config, error) {
 	decoder.DisallowUnknownFields()
 
 	if err := decoder.Decode(&configItem); err != nil {
-		return config{}, errors.New("Decode error")
+		return config{}, fmt.Errorf("%s - cannot decode the config.json file", red("ERROR"))
 	}
 
 	return configItem, nil

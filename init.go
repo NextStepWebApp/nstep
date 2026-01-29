@@ -41,15 +41,15 @@ func initLocalPackage(cfg config) error {
 	projectName := setupItem.ProjectName
 	projectUrl := setupItem.VersionUrl
 
-	fmt.Println("===> Package build setup...")
-	fmt.Printf("Downloading %s package.json from %s\n", projectName, projectUrl)
+	fmt.Printf("%s Package build setup...\n", green("===>"))
+	fmt.Printf(" %s Downloading %s package.json from %s\n", yellow("->"), projectName, projectUrl)
 
 	err = downloadpackage(projectUrl, cfg.getPackagePath())
 	if err != nil {
 		return fmt.Errorf("%w", err)
 	}
 
-	fmt.Println("===> Package build setup completed successfully")
+	fmt.Printf("%s Package build setup completed successfully\n", green("===>"))
 	return nil
 }
 

@@ -29,46 +29,12 @@ func (s settingsConfig) getSettingsPermissionExec() int {
 func (s settingsConfig) getSettingsPermissionSensitive() int {
 	return s.Permissions.Defaults.Sensitive
 }
-func (s settingsConfig) getSettingsPermissionsAll() []int {
-	return []int{
-		s.Permissions.Defaults.Files,
-		s.Permissions.Defaults.Dirs,
-		s.Permissions.Defaults.Exec,
-		s.Permissions.Defaults.Sensitive,
-	}
-}
-
 func loadSettings(cfg config) (settingsConfig, error) {
 	settingItem := settingsConfig{}
 
 	tomlFile := cfg.getSettingsFile()
-	if _, err := toml.DecodeFile(tomlFile, settingItem); err != nil {
+	if _, err := toml.DecodeFile(tomlFile, &settingItem); err != nil {
 		return settingsConfig{}, fmt.Errorf("%s - cannot decode %s", red("ERROR"), tomlFile)
 	}
-
-	for _, permission := range settingItem.getSettingsPermissionsAll() {
-		if !isValidOctalPermission(permission) {
-			return settingsConfig{}, fmt.Errorf("%s - wrong permission number in %s", red("ERROR"), tomlFile)
-		}
-	}
-
 	return settingItem, nil
-}
-
-func isValidOctalPermission(perm int) bool {
-	if perm < 0 || perm > 0777 {
-		return false
-	}
-
-	var temp, digit int
-	temp = perm
-	for temp > 0 {
-		digit = temp % 10
-		if digit > 7 {
-			return false
-		}
-		temp = temp / 10
-	}
-
-	return true
 }
