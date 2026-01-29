@@ -49,8 +49,8 @@ type webAppResult struct {
 func updateAllComponents(cfg config, settings settingsConfig, plj *packageLocalJson, resultversion *versionCheck) (currentwebpath string, err error) {
 	startNow := time.Now()
 	ch := make(chan string)
-	webAppResultCh := make(chan webAppResult, 1)
-	errCh := make(chan error, 1)
+	webAppResultCh := make(chan webAppResult)
+	errCh := make(chan error)
 	var wg sync.WaitGroup
 
 	if resultversion.isUpdatePackageAvailable() {
