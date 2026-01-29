@@ -42,9 +42,11 @@ func setupMovesRollback(currentfilepath string) error {
 func updateAllComponents(cfg config, settings settingsConfig, plj *packageLocalJson, resultversion *versionCheck) (currentwebpath string, err error) {
 	startNow := time.Now()
 
+	fmt.Printf("%s Component setup...", green("===>"))
+
 	// Update package if available
 	if resultversion.isUpdatePackageAvailable() {
-		err := onlineToLocalPackage(cfg, resultversion)
+		err := onlineToLocalPackage(cfg, resultversion, settings)
 		if err != nil {
 			return "", fmt.Errorf("%s - cannot update package component: %w", red("ERROR"), err)
 		}
@@ -52,7 +54,7 @@ func updateAllComponents(cfg config, settings settingsConfig, plj *packageLocalJ
 
 	// Update webapp if available
 	if resultversion.isUpdateWebAppAvailable() {
-		currentwebpath, err = onlineToLocalWebApp(cfg, plj, resultversion)
+		currentwebpath, err = onlineToLocalWebApp(cfg, plj, resultversion, settings)
 		if err != nil {
 			return "", fmt.Errorf("%s - cannot update webapp component: %w", red("ERROR"), err)
 		}
@@ -61,24 +63,27 @@ func updateAllComponents(cfg config, settings settingsConfig, plj *packageLocalJ
 	message := fmt.Sprintf("%s This operation took: %v", yellow(" ->"), time.Since(startNow))
 	verbosePrint(message, settings)
 
+	fmt.Printf("%s Component setup finished successfully", green("===>"))
+
 	return currentwebpath, nil
 }
 
-func onlineToLocalPackage(cfg config, resultversion *versionCheck) error {
+func onlineToLocalPackage(cfg config, resultversion *versionCheck, settings settingsConfig) error {
 	packageUrl := resultversion.getPackageURL()
 	packagePath := cfg.getPackagePath()
 
 	err := downloadpackage(packageUrl, packagePath)
 	if err != nil {
-		return fmt.Errorf("cannot download %s to %s: %w", packageUrl, packagePath, err)
+		return fmt.Errorf("cannot download %s to %s", packageUrl, packagePath)
 	}
 
-	fmt.Printf("%s %s downloaded successfully\n", yellow(" ->"), getPackageName(cfg))
+	message := fmt.Sprintf("%s %s downloaded successfully\n", yellow(" ->"), getPackageName(cfg))
+	verbosePrint(message, settings)
 	return nil
 }
 
-func onlineToLocalWebApp(cfg config, plj *packageLocalJson, resultversion *versionCheck) (string, error) {
-	var filename string
+func onlineToLocalWebApp(cfg config, plj *packageLocalJson, resultversion *versionCheck, settings settingsConfig) (string, error) {
+	var filename, message string
 
 	// Format filepath to store download
 	downloadpath := cfg.getDownloadPath()
@@ -87,15 +92,17 @@ func onlineToLocalWebApp(cfg config, plj *packageLocalJson, resultversion *versi
 
 	err := downloadpackage(resultversion.getDownloadURL(), downloadfilepath)
 	if err != nil {
-		return "", fmt.Errorf("error downloading package: %w", err)
+		return "", fmt.Errorf("cannot download %s", plj.getName())
 	}
 
 	// Verifying package integrity
 	err = verifyChecksum(downloadfilepath, resultversion.getChecksum())
 	if err != nil {
-		return "", fmt.Errorf("verification failed: %w", err)
+		return "", fmt.Errorf("%s verification failed", plj.getName())
 	}
-	fmt.Printf("%s %s verified successfully\n", yellow(" ->"), plj.getName())
+
+	message = fmt.Sprintf("%s %s verified successfully\n", yellow(" ->"), plj.getName())
+	verbosePrint(message, settings)
 
 	// Extract the downloaded package
 	versionpath := cfg.getVersionPath()
@@ -104,22 +111,25 @@ func onlineToLocalWebApp(cfg config, plj *packageLocalJson, resultversion *versi
 
 	err = extractpackage(downloadfilepath, versionfilepath, 1)
 	if err != nil {
-		return "", fmt.Errorf("error extracting package: %w", err)
+		return "", fmt.Errorf("error extracting %s", plj.getName())
 	}
-	fmt.Printf("%s %s extracted successfully\n", yellow(" ->"), plj.getName())
+	message = fmt.Sprintf("%s %s extracted successfully\n", yellow(" ->"), plj.getName())
+	verbosePrint(message, settings)
 
 	// Symlink the new version to the current one
 	err = emptyDir(cfg.getCurrentPath())
 	if err != nil {
-		return "", fmt.Errorf("error emptying directory: %w", err)
+		return "", fmt.Errorf("cannot empty directory: %w", err)
 	}
 
 	currentfilepath := fmt.Sprintf("%s/%s", cfg.getCurrentPath(), filename)
 	err = os.Symlink(versionfilepath, currentfilepath)
 	if err != nil {
-		return "", fmt.Errorf("error creating symlink: %w", err)
+		return "", fmt.Errorf("cannot create symlink")
 	}
-	fmt.Printf("%s %s downloaded successfully\n", yellow(" ->"), plj.getName())
+
+	message = fmt.Sprintf("%s %s downloaded successfully\n", yellow(" ->"), plj.getName())
+	verbosePrint(message, settings)
 
 	return currentfilepath, nil
 }
