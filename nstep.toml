@@ -1,4 +1,7 @@
 # /etc/nstep/nstep.toml
+[output]
+verbose = false
+
 [permissions.defaults]
 files = 0o644
 directories = 0o755

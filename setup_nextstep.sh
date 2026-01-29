@@ -4,18 +4,15 @@ installpackage() {
     local pkgs="$@"
     while true; do
         if ! pacman -S --noconfirm --needed $pkgs; then
-            echo "ERROR: Failed to install: $pkgs"
+            echo " -> Failed to install: $pkgs"
             echo "Retrying..."
         else
-            echo "SUCCESS: Installed $pkgs"
+            echo " -> Installed $pkgs"
             break
         fi
     done
 }
 
-echo -ne "
-==> NextStep Web App Setup
-"
 
 installpackage php php-sqlite php-fpm apache python
 
@@ -76,10 +73,7 @@ else
     echo "extension=sqlite3" >> /etc/php/php.ini
 fi
 
-echo "Restarting services..."
+echo " -> Restarting services..."
 systemctl restart httpd.service
 systemctl restart php-fpm.service
 
-echo "
-==> NextStep setup finished successfully!
-"

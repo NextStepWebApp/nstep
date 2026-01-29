@@ -16,6 +16,7 @@ var (
 	yellow = color.New(color.FgYellow, color.Bold).SprintFunc()
 	red    = color.New(color.FgRed, color.Bold).SprintFunc()
 	green  = color.New(color.FgGreen, color.Bold).SprintFunc()
+	blue   = color.New(color.FgBlue, color.Bold).SprintFunc()
 )
 
 func main() {
@@ -52,10 +53,19 @@ func main() {
 	}
 
 	if command == "init" {
-		// Setup the package
-		err = initLocalPackage(cfg)
+		err = sudoPowerChecker()
+		powerHandler(err)
+
+		// Create directories if not exist
+		err = cfg.diravailable(settings)
 		if err != nil {
-			fmt.Fprintln(os.Stderr, "cannot setup package.json", err)
+			fmt.Fprintln(os.Stderr, err)
+		}
+
+		// Setup the package
+		err = initLocalPackage(cfg, settings)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
 		// If not exit it will move to the switch block
@@ -69,13 +79,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Check to see if the directories exist (config.go)
-	err = cfg.diravailable()
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "Error creating filepath", err)
-		sudoPowerChecker()
-		powerHandler(err)
-	}
 	// nstep commands
 	switch command {
 
@@ -172,7 +175,7 @@ func printUsage() {
 	fmt.Println("	install      Install the nextstep webapp")
 	fmt.Println("	update       Update nextstep to latest version")
 	fmt.Println("	rollback     Rollback to previous version")
-	fmt.Println("   status     	 See the current version")
+	fmt.Println("	status       See the current version")
 	fmt.Println("	unlock       Clear stuck nstep lock")
 	fmt.Println("	remove       Remove the nextstep webapp")
 }

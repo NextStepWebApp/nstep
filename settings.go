@@ -7,6 +7,10 @@ import (
 )
 
 type settingsConfig struct {
+	Output struct {
+		Verbose bool `toml:"verbose"`
+	} `toml:"output"`
+
 	Permissions struct {
 		Defaults struct {
 			Files     int `toml:"files"`
@@ -15,6 +19,10 @@ type settingsConfig struct {
 			Sensitive int `toml:"sensitive"`
 		} `toml:"defaults"`
 	} `toml:"permissions"`
+}
+
+func (s settingsConfig) getOutputStatus() bool {
+	return s.Output.Verbose
 }
 
 func (s settingsConfig) getSettingPermissionFile() int {

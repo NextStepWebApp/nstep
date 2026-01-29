@@ -8,6 +8,12 @@ import (
 	"strconv"
 )
 
+func verbosePrint(message string, settings settingsConfig) {
+	if settings.getOutputStatus() {
+		fmt.Println(message)
+	}
+}
+
 // This function gets the uid, gid from the group you give it
 // Usefull to use with chown
 func getUidGid(group string) (uid int, gid int, err error) {
@@ -95,7 +101,7 @@ func emptyDir(dirpath string) error {
 
 func sudoPowerChecker() error {
 	if os.Geteuid() != 0 {
-		return fmt.Errorf("this command must be run as root (use sudo)")
+		return fmt.Errorf("%s - this command must be run as root %s", yellow("Warning"), blue("(use sudo)"))
 	}
 	return nil
 }

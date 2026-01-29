@@ -66,20 +66,26 @@ func (c config) getCurrentPath() string {
 
 // function to see if the dirs are available,
 // if not create them
-func (c config) diravailable() error {
+func (c config) diravailable(settings settingsConfig) error {
 	paths := []string{
 		c.getDownloadPath(),
 		c.getVersionPath(),
 		c.getBackupPath(),
 		c.getCurrentPath(),
 	}
-
+	fmt.Printf("%s Required directory setup...\n", green("===>"))
 	for _, path := range paths {
-		err := os.MkdirAll(path, 0755)
+		err := os.MkdirAll(path, os.FileMode(settings.getSettingPermissionDir()))
 		if err != nil {
-			return fmt.Errorf("cannot create %s: %w", path, err)
+			return fmt.Errorf("%s - cannot create %s", red("ERROR"), path)
+		} else {
+			if settings.getOutputStatus() {
+				message := fmt.Sprintf("%s created %s", yellow(" ->"), path)
+				verbosePrint(message, settings)
+			}
 		}
 	}
+	fmt.Printf("%s Required directory setup completed successfully\n", green("===>"))
 	return nil
 }
 

@@ -14,7 +14,7 @@ func statusNextStep(plj *packageLocalJson, cfg config, state *state) error {
 	_, err = os.ReadDir(plj.getLocalWebpath())
 	if err != nil {
 		if os.IsNotExist(err) {
-			return fmt.Errorf("%s is not installed. Run 'sudo nstep install'", plj.getName())
+			return fmt.Errorf("%s - %s is not installed. Run %s", yellow("Warning"), plj.getName(), blue("sudo nstep install"))
 		} else {
 			return fmt.Errorf("cannot check installation status: %w", err)
 		}

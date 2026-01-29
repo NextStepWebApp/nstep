@@ -15,17 +15,17 @@ type initPackage struct {
 // This function gets the version url of the remote project
 // At the beginning that does not exits so get it from that
 // and after delete the install.json (no longer needed)
-func initLocalPackage(cfg config) error {
+func initLocalPackage(cfg config, settings settingsConfig) error {
 	var err error
 
 	// Check to see if the command whas already executed
 	if _, err = os.Stat(cfg.getPackagePath()); err == nil {
-		return fmt.Errorf("Already initialized")
+		return fmt.Errorf("%s - already initialized", yellow("Warning"))
 	}
 
 	setupFile, err := os.Open(cfg.getSetupFile())
 	if err != nil {
-		return fmt.Errorf("cannot open setup file %w", err)
+		return fmt.Errorf("%s cannot load the setup.json file", red("ERROR"))
 	}
 	defer setupFile.Close()
 
@@ -35,14 +35,16 @@ func initLocalPackage(cfg config) error {
 	decoder.DisallowUnknownFields()
 
 	if err := decoder.Decode(&setupItem); err != nil {
-		return fmt.Errorf("cannot decode %w", err)
+		return fmt.Errorf("%s - cannot decode the setup.json file", red("ERROR"))
 	}
 
 	projectName := setupItem.ProjectName
 	projectUrl := setupItem.VersionUrl
 
 	fmt.Printf("%s Package build setup...\n", green("===>"))
-	fmt.Printf(" %s Downloading %s package.json from %s\n", yellow("->"), projectName, projectUrl)
+
+	message := fmt.Sprintf(" %s Downloading %s package.json from %s", yellow("->"), projectName, projectUrl)
+	verbosePrint(message, settings)
 
 	err = downloadpackage(projectUrl, cfg.getPackagePath())
 	if err != nil {
