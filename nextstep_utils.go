@@ -6,7 +6,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
-	"sync"
 	"time"
 )
 
@@ -40,54 +39,23 @@ func setupMovesRollback(currentfilepath string) error {
 	return nil
 }
 
-// Struct for updateAllComponents func
-type webAppResult struct {
-	path string
-	err  error
-}
-
 func updateAllComponents(cfg config, settings settingsConfig, plj *packageLocalJson, resultversion *versionCheck) (currentwebpath string, err error) {
 	startNow := time.Now()
-	ch := make(chan string)
-	webAppResultCh := make(chan webAppResult)
-	errCh := make(chan error)
-	var wg sync.WaitGroup
 
+	// Update package if available
 	if resultversion.isUpdatePackageAvailable() {
-		wg.Add(1)
-		go onlineToLocalPackage(cfg, resultversion, ch, errCh, &wg)
-	}
-
-	if resultversion.isUpdateWebAppAvailable() {
-		wg.Add(1)
-		go onlineToLocalWebApp(cfg, plj, resultversion, ch, webAppResultCh, &wg)
-	}
-
-	// Close channels when all goroutines complete
-	go func() {
-		wg.Wait()
-		close(ch)
-		close(errCh)
-		close(webAppResultCh)
-	}()
-
-	// Print progress messages as they come in
-	for result := range ch {
-		fmt.Printf("%s %s\n", yellow(" ->"), result)
-	}
-
-	// Check for package download errors
-	for err := range errCh {
+		err := onlineToLocalPackage(cfg, resultversion)
 		if err != nil {
 			return "", fmt.Errorf("%s - cannot update package component: %w", red("ERROR"), err)
 		}
 	}
 
-	// Check webapp result
-	if webAppResults := <-webAppResultCh; webAppResults.err != nil {
-		return "", fmt.Errorf("%s - cannot update webapp component: %w", red("ERROR"), webAppResults.err)
-	} else {
-		currentwebpath = webAppResults.path
+	// Update webapp if available
+	if resultversion.isUpdateWebAppAvailable() {
+		currentwebpath, err = onlineToLocalWebApp(cfg, plj, resultversion)
+		if err != nil {
+			return "", fmt.Errorf("%s - cannot update webapp component: %w", red("ERROR"), err)
+		}
 	}
 
 	message := fmt.Sprintf("%s This operation took: %v", yellow(" ->"), time.Since(startNow))
@@ -96,24 +64,20 @@ func updateAllComponents(cfg config, settings settingsConfig, plj *packageLocalJ
 	return currentwebpath, nil
 }
 
-func onlineToLocalPackage(cfg config, resultversion *versionCheck, ch chan<- string, errCh chan<- error, wg *sync.WaitGroup) {
-	defer wg.Done()
-
+func onlineToLocalPackage(cfg config, resultversion *versionCheck) error {
 	packageUrl := resultversion.getPackageURL()
 	packagePath := cfg.getPackagePath()
 
 	err := downloadpackage(packageUrl, packagePath)
 	if err != nil {
-		errCh <- fmt.Errorf("cannot download %s to %s: %w", packageUrl, packagePath, err)
-		return
+		return fmt.Errorf("cannot download %s to %s: %w", packageUrl, packagePath, err)
 	}
 
-	ch <- fmt.Sprintf("%s downloaded successfully", getPackageName(cfg))
+	fmt.Printf("%s %s downloaded successfully\n", yellow(" ->"), getPackageName(cfg))
+	return nil
 }
 
-func onlineToLocalWebApp(cfg config, plj *packageLocalJson, resultversion *versionCheck, ch chan<- string, resultCh chan<- webAppResult, wg *sync.WaitGroup) {
-	defer wg.Done()
-
+func onlineToLocalWebApp(cfg config, plj *packageLocalJson, resultversion *versionCheck) (string, error) {
 	var filename string
 
 	// Format filepath to store download
@@ -123,17 +87,15 @@ func onlineToLocalWebApp(cfg config, plj *packageLocalJson, resultversion *versi
 
 	err := downloadpackage(resultversion.getDownloadURL(), downloadfilepath)
 	if err != nil {
-		resultCh <- webAppResult{path: "", err: fmt.Errorf("error downloading package: %w", err)}
-		return
+		return "", fmt.Errorf("error downloading package: %w", err)
 	}
 
 	// Verifying package integrity
 	err = verifyChecksum(downloadfilepath, resultversion.getChecksum())
 	if err != nil {
-		resultCh <- webAppResult{path: "", err: fmt.Errorf("verification failed: %w", err)}
-		return
+		return "", fmt.Errorf("verification failed: %w", err)
 	}
-	ch <- fmt.Sprintf("%s verified successfully", plj.getName())
+	fmt.Printf("%s %s verified successfully\n", yellow(" ->"), plj.getName())
 
 	// Extract the downloaded package
 	versionpath := cfg.getVersionPath()
@@ -142,28 +104,24 @@ func onlineToLocalWebApp(cfg config, plj *packageLocalJson, resultversion *versi
 
 	err = extractpackage(downloadfilepath, versionfilepath, 1)
 	if err != nil {
-		resultCh <- webAppResult{path: "", err: fmt.Errorf("error extracting package: %w", err)}
-		return
+		return "", fmt.Errorf("error extracting package: %w", err)
 	}
-	ch <- fmt.Sprintf("%s extracted successfully", plj.getName())
+	fmt.Printf("%s %s extracted successfully\n", yellow(" ->"), plj.getName())
 
 	// Symlink the new version to the current one
 	err = emptyDir(cfg.getCurrentPath())
 	if err != nil {
-		resultCh <- webAppResult{path: "", err: fmt.Errorf("error emptying directory: %w", err)}
-		return
+		return "", fmt.Errorf("error emptying directory: %w", err)
 	}
 
 	currentfilepath := fmt.Sprintf("%s/%s", cfg.getCurrentPath(), filename)
 	err = os.Symlink(versionfilepath, currentfilepath)
 	if err != nil {
-		resultCh <- webAppResult{path: "", err: fmt.Errorf("error creating symlink: %w", err)}
-		return
+		return "", fmt.Errorf("error creating symlink: %w", err)
 	}
-	ch <- fmt.Sprintf("%s downloaded successfully", plj.getName())
+	fmt.Printf("%s %s downloaded successfully\n", yellow(" ->"), plj.getName())
 
-	// Success!
-	resultCh <- webAppResult{path: currentfilepath, err: nil}
+	return currentfilepath, nil
 }
 
 func setupMovesInstallUpdate(commandStatus string, plj *packageLocalJson) error {
