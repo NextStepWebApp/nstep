@@ -9,6 +9,14 @@ import (
 func nextStepSetup(cfg config, resultversion *versionCheck, plj *packageLocalJson, settings settingsConfig, state *state, status *status, sourceDir *string) error {
 	var err error
 
+	// Nstep lock check
+	lockfile, err := lockNstep(cfg)
+	if err != nil {
+		return fmt.Errorf("Error update.lock %w", err)
+	}
+	defer lockfile.Close()
+	defer os.Remove(cfg.getLockFilePath())
+
 	// Safty check to see if this is a install or update
 	commandStatus, err := status.getStatus()
 	if err != nil {
@@ -62,17 +70,8 @@ func nextStepSetup(cfg config, resultversion *versionCheck, plj *packageLocalJso
 			return fmt.Errorf("internal error: rollback command, but source directory is nil")
 		}
 
-		fmt.Println("==> Rollback setup..")
 	}
 	// End of checks
-
-	// Nstep lock check
-	lockfile, err := lockNstep(cfg)
-	if err != nil {
-		return fmt.Errorf("Error update.lock %w", err)
-	}
-	defer lockfile.Close()
-	defer os.Remove(cfg.getLockFilePath())
 
 	// End of preperation
 	//
@@ -82,25 +81,25 @@ func nextStepSetup(cfg config, resultversion *versionCheck, plj *packageLocalJso
 	case "install":
 		currentfilepath, err := updateAllComponents(cfg, settings, plj, resultversion)
 		if err != nil {
-			return fmt.Errorf("%w", err)
+			return err
 		}
 
 		// Create or recreate the nextstep structure
-		err = nextStepCreate(plj)
+		err = nextStepCreate(plj, settings)
 		if err != nil {
-			return fmt.Errorf("%w", err)
+			return err
 		}
 
 		// get the current version to the web portal
 		err = copyDir(currentfilepath, plj.getLocalWebpath(), settings)
 		if err != nil {
-			return fmt.Errorf("cannot copy current to webpath %w", err)
+			return err
 		}
 
 		// put the config files etc in the right place and remove unused files in the web portal
 		err = setupMovesInstallUpdate("install", plj, settings)
 		if err != nil {
-			return fmt.Errorf("cannot do the setup moves %w", err)
+			return err
 		}
 	case "update":
 		currentfilepath, err := updateAllComponents(cfg, settings, plj, resultversion)
@@ -153,7 +152,7 @@ func nextStepSetup(cfg config, resultversion *versionCheck, plj *packageLocalJso
 	// Now update the state
 	err = saveState(plj, cfg, resultversion, state)
 	if err != nil {
-		return fmt.Errorf("%w", err)
+		return err
 	}
 
 	return nil

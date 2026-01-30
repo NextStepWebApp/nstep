@@ -66,14 +66,14 @@ func saveState(plj *packageLocalJson, cfg config, resultversion *versionCheck, s
 	if resultversion.isUpdatePackageAvailable() {
 
 		state.InstalledPackageVersion = resultversion.getLatestPackageVersion()
-		fmt.Printf("==> Updating local %s system %d -> %d\n", getPackageName(cfg),
+		fmt.Printf("%s Updating local %s system %d -> %d\n", green("===>"), getPackageName(cfg),
 			resultversion.getCurrentPackageVersion(), resultversion.getLatestPackageVersion())
 	}
 
 	if resultversion.isUpdateWebAppAvailable() {
 
 		state.InstalledWebAppVersion = resultversion.getLatestWebAppVersion()
-		fmt.Printf("==> Updating local %s system %s -> %s\n", plj.getName(),
+		fmt.Printf("%s Updating local %s system %s -> %s\n", green("===>"), plj.getName(),
 			resultversion.getCurrentWebAppVersion(), resultversion.getLatestWebAppVersion())
 	}
 
@@ -82,12 +82,12 @@ func saveState(plj *packageLocalJson, cfg config, resultversion *versionCheck, s
 
 	data, err := json.MarshalIndent(state, "", "  ")
 	if err != nil {
-		return fmt.Errorf("cannot marshal state: %w", err)
+		return fmt.Errorf("%s - cannot marshal state", red("ERROR"))
 	}
 
 	err = os.WriteFile(cfg.getStateFile(), data, 0644)
 	if err != nil {
-		return fmt.Errorf("cannot write state file: %w", err)
+		return fmt.Errorf("%s - cannot write state file", red("ERROR"))
 	}
 
 	return nil

@@ -95,7 +95,7 @@ func onlineToLocalWebApp(cfg config, plj *packageLocalJson, resultversion *versi
 		return "", fmt.Errorf("cannot download %s", plj.getName())
 	}
 
-	message = fmt.Sprintf("%s %s downloaded successfully\n", yellow(" ->"), plj.getName())
+	message = fmt.Sprintf("%s %s downloaded successfully", yellow(" ->"), plj.getName())
 	verbosePrint(message, settings)
 
 	// Verifying package integrity
@@ -104,7 +104,7 @@ func onlineToLocalWebApp(cfg config, plj *packageLocalJson, resultversion *versi
 		return "", fmt.Errorf("%s verification failed", plj.getName())
 	}
 
-	message = fmt.Sprintf("%s %s verified successfully\n", yellow(" ->"), plj.getName())
+	message = fmt.Sprintf("%s %s verified successfully", yellow(" ->"), plj.getName())
 	verbosePrint(message, settings)
 
 	// Extract the downloaded package
@@ -116,7 +116,7 @@ func onlineToLocalWebApp(cfg config, plj *packageLocalJson, resultversion *versi
 	if err != nil {
 		return "", fmt.Errorf("error extracting %s", plj.getName())
 	}
-	message = fmt.Sprintf("%s %s extracted successfully\n", yellow(" ->"), plj.getName())
+	message = fmt.Sprintf("%s %s extracted successfully", yellow(" ->"), plj.getName())
 	verbosePrint(message, settings)
 
 	// Symlink the new version to the current one
@@ -183,7 +183,7 @@ func setupMovesInstallUpdate(commandStatus string, plj *packageLocalJson, settin
 	for _, dir := range dirsToRemove {
 		err := removeDir(dir)
 		if err != nil {
-			return fmt.Errorf("Error removing directory %s %w", dir, err)
+			return fmt.Errorf("%s - removing %s", red("ERROR"), dir)
 		}
 		fmt.Printf("%s %s\n", red("  - remove"), dir)
 	}
@@ -269,17 +269,25 @@ func nextstepPermissionManager(moveAction moveAction) error {
 	return nil
 }
 
-func nextStepCreate(plj *packageLocalJson) error {
+func nextStepCreate(plj *packageLocalJson, settings settingsConfig) error {
 	var err error
+
+	fmt.Printf("%s %s required directory setup\n", green("===>"), plj.getName())
+
 	// Make the required directories with the write permissions and ownerships
 	dirs := plj.getRequiredDirInfo()
 
 	for _, dir := range dirs {
 		err = os.MkdirAll(dir.Dir, os.FileMode(dir.Permission))
 		if err != nil {
-			return fmt.Errorf("cannot create directory %s %w", dir.Dir, err)
+			return fmt.Errorf("%s - cannot create directory %s", red("ERROR"), dir.Dir)
+		} else {
+			message := fmt.Sprintf("%s created %s", yellow(" ->"), dir.Dir)
+			verbosePrint(message, settings)
 		}
 	}
+
+	fmt.Printf("%s %s required directory setup completed successfully\n", green("===>"), plj.getName())
 
 	return nil
 }

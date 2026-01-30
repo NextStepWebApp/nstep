@@ -35,13 +35,16 @@ func getUidGid(group string) (uid int, gid int, err error) {
 }
 
 func copyDir(src, dst string, settings settingsConfig) error {
+
+	fmt.Printf("%s copy setup...\n", yellow(" ->"))
+
 	if err := os.MkdirAll(dst, 0755); err != nil {
-		return fmt.Errorf("cannot create destination directory: %w", err)
+		return fmt.Errorf("%s - cannot create %s", red("ERROR"), dst)
 	}
 
 	entries, err := os.ReadDir(src)
 	if err != nil {
-		return fmt.Errorf("cannot read directory %s: %w", src, err)
+		return fmt.Errorf("%s - cannot read %s", red("ERROR"), src)
 	}
 
 	for _, entry := range entries {

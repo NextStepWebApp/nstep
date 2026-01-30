@@ -20,7 +20,7 @@ func loadlocalpackage(cfg config) (*packageLocalJson, error) {
 
 	jsonLocalFile, err := os.Open(packagepath)
 	if err != nil {
-		fmt.Println("Run 'sudo nstep init'")
+		fmt.Printf("Run %s\n", blue("sudo nstep init"))
 		return nil, fmt.Errorf("%s - cannot load package.json", red("ERROR"))
 
 	}
