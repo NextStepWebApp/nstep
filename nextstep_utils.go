@@ -12,7 +12,7 @@ import (
 // This files is for all the functions that are spessifically for nextstep.go
 // To make the lines of code of nextstep.go smaller and better to read
 
-func setupMovesRollback(currentfilepath string) error {
+func setupMovesRollback(currentfilepath string, settings settingsConfig) error {
 
 	entries, err := os.ReadDir(currentfilepath)
 	if err != nil {
@@ -29,7 +29,7 @@ func setupMovesRollback(currentfilepath string) error {
 
 		fmt.Printf("realname: %s\n", realName)
 
-		err = copyDir(dirName, realName)
+		err = copyDir(dirName, realName, settings)
 		if err != nil {
 			return fmt.Errorf("%w", err)
 		}
@@ -42,7 +42,7 @@ func setupMovesRollback(currentfilepath string) error {
 func updateAllComponents(cfg config, settings settingsConfig, plj *packageLocalJson, resultversion *versionCheck) (currentwebpath string, err error) {
 	startNow := time.Now()
 
-	fmt.Printf("%s Component setup...", green("===>"))
+	fmt.Printf("%s Component setup...\n", green("===>"))
 
 	// Update package if available
 	if resultversion.isUpdatePackageAvailable() {
@@ -63,7 +63,7 @@ func updateAllComponents(cfg config, settings settingsConfig, plj *packageLocalJ
 	message := fmt.Sprintf("%s This operation took: %v", yellow(" ->"), time.Since(startNow))
 	verbosePrint(message, settings)
 
-	fmt.Printf("%s Component setup finished successfully", green("===>"))
+	fmt.Printf("%s Component setup finished successfully\n", green("===>"))
 
 	return currentwebpath, nil
 }
@@ -77,7 +77,7 @@ func onlineToLocalPackage(cfg config, resultversion *versionCheck, settings sett
 		return fmt.Errorf("cannot download %s to %s", packageUrl, packagePath)
 	}
 
-	message := fmt.Sprintf("%s %s downloaded successfully\n", yellow(" ->"), getPackageName(cfg))
+	message := fmt.Sprintf("%s %s downloaded successfully", yellow(" ->"), getPackageName(cfg))
 	verbosePrint(message, settings)
 	return nil
 }
@@ -94,6 +94,9 @@ func onlineToLocalWebApp(cfg config, plj *packageLocalJson, resultversion *versi
 	if err != nil {
 		return "", fmt.Errorf("cannot download %s", plj.getName())
 	}
+
+	message = fmt.Sprintf("%s %s downloaded successfully\n", yellow(" ->"), plj.getName())
+	verbosePrint(message, settings)
 
 	// Verifying package integrity
 	err = verifyChecksum(downloadfilepath, resultversion.getChecksum())
@@ -128,20 +131,18 @@ func onlineToLocalWebApp(cfg config, plj *packageLocalJson, resultversion *versi
 		return "", fmt.Errorf("cannot create symlink")
 	}
 
-	message = fmt.Sprintf("%s %s downloaded successfully\n", yellow(" ->"), plj.getName())
-	verbosePrint(message, settings)
-
 	return currentfilepath, nil
 }
 
-func setupMovesInstallUpdate(commandStatus string, plj *packageLocalJson) error {
+func setupMovesInstallUpdate(commandStatus string, plj *packageLocalJson, settings settingsConfig) error {
 	// Safty check
 	if commandStatus != "install" && commandStatus != "update" {
-		return fmt.Errorf("internal code error, wrong use of function")
+		return fmt.Errorf("%s - internal code error, wrong use of function", red("ERROR"))
 	}
 
 	var moveActions []moveAction
 	var dirsToRemove []string
+	var message string
 
 	switch commandStatus {
 	case "install":
@@ -152,22 +153,31 @@ func setupMovesInstallUpdate(commandStatus string, plj *packageLocalJson) error 
 		dirsToRemove = plj.getUpdateRemoves()
 	}
 
+	fmt.Printf("%s install/update setup...\n", green("===>"))
+
+	message = fmt.Sprintf("%s moving files", yellow(" ->"))
+	verbosePrint(message, settings)
+
 	// Execute all moves
 	for _, move := range moveActions {
 		err := moveFile(move.From, move.To)
 		if err != nil {
-			return fmt.Errorf("Error moving file %w\n", err)
+			return fmt.Errorf("%s - cannot move file %s -> %s", red("ERROR"), move.From, move.To)
 		}
 
 		// Set up correct permissions
 
 		err = nextstepPermissionManager(move)
 		if err != nil {
-			return fmt.Errorf("cannot set up permission for %s %w", move.To, err)
+			return fmt.Errorf("%s - cannot set up permission for %s", red("ERROR"), move.To)
 		}
 
-		fmt.Printf("Moved: %s -> %s\n", move.From, move.To)
+		message = fmt.Sprintf("%s %s -> %s", cyan("  - move"), move.From, move.To)
+		verbosePrint(message, settings)
 	}
+
+	message = fmt.Sprintf("%s removing directories", yellow(" ->"))
+	verbosePrint(message, settings)
 
 	// Remove directories
 	for _, dir := range dirsToRemove {
@@ -175,8 +185,10 @@ func setupMovesInstallUpdate(commandStatus string, plj *packageLocalJson) error 
 		if err != nil {
 			return fmt.Errorf("Error removing directory %s %w", dir, err)
 		}
-		fmt.Printf("Removed: %s\n", dir)
+		fmt.Printf("%s %s\n", red("  - remove"), dir)
 	}
+
+	fmt.Printf("%s install/update setup finished successfully\n", green("===>"))
 
 	return nil
 }
@@ -224,24 +236,28 @@ func nextstepPermissionManager(moveAction moveAction) error {
 
 	uid, gid, err := getUidGid(owner)
 	if err != nil {
-		return fmt.Errorf("cannot get uid gid for %s %w\n", owner, err)
+		//return fmt.Errorf("cannot get uid gid for %s %w", owner, err)
+		return err
 	}
 
 	if group != owner {
 		_, gid, err = getUidGid(group)
 		if err != nil {
-			return fmt.Errorf("cannot get uid gid for %s %w\n", group, err)
+			//return fmt.Errorf("cannot get uid gid for %s %w", group, err)
+			return err
 		}
 	}
 
 	// Directory permissions setup
 	err = os.Chmod(dir, os.FileMode(permission))
 	if err != nil {
-		return fmt.Errorf("cannot change permission of %s %w\n", dir, err)
+		//return fmt.Errorf("cannot change permission of %s %w", dir, err)
+		return err
 	}
 	err = os.Chown(dir, uid, gid)
 	if err != nil {
-		return fmt.Errorf("cannot change ownership of directory %s %w\n", dir, err)
+		//return fmt.Errorf("cannot change ownership of directory %s %w", dir, err)
+		return err
 
 	}
 
@@ -261,7 +277,7 @@ func nextStepCreate(plj *packageLocalJson) error {
 	for _, dir := range dirs {
 		err = os.MkdirAll(dir.Dir, os.FileMode(dir.Permission))
 		if err != nil {
-			return fmt.Errorf("cannot create directory %s %w\n", dir.Dir, err)
+			return fmt.Errorf("cannot create directory %s %w", dir.Dir, err)
 		}
 	}
 
@@ -271,13 +287,15 @@ func nextStepCreate(plj *packageLocalJson) error {
 func nextStepBackup(cfg config, resultversion *versionCheck, settings settingsConfig, plj *packageLocalJson) error {
 	// run the extra update stuff: bakup the nstep instance
 	var err error
-	var name string
+	var name, message string
+
+	fmt.Printf("%s %s %s backup...\n", green("===>"), plj.getName(), resultversion.getCurrentWebAppVersion())
 
 	// make the version directory
 	versionbackup := fmt.Sprintf("%s/%s", cfg.getBackupPath(), resultversion.getCurrentWebAppVersion())
 	err = os.MkdirAll(versionbackup, os.FileMode(settings.getSettingPermissionDir()))
 	if err != nil {
-		return fmt.Errorf("cannot make %s %w", versionbackup, err)
+		return fmt.Errorf("%s - cannot make %s", red("ERROR"), versionbackup)
 	}
 
 	dirs := plj.getRequiredDirInfo()
@@ -295,38 +313,55 @@ func nextStepBackup(cfg config, resultversion *versionCheck, settings settingsCo
 
 		// Before I had rename, but this in a way resets the web app
 		// So it needs to be copy
-		err = copyDir(dir.Dir, name)
+
+		message = fmt.Sprintf("%s copying directories", yellow(" ->"))
+		verbosePrint(message, settings)
+
+		err = copyDir(dir.Dir, name, settings)
 		if err != nil {
-			return fmt.Errorf("cannot backup %s %w", dir.Dir, err)
+			return fmt.Errorf("%s - cannot backup %s", red("ERROR"), dir.Dir)
 		}
 	}
 
 	// Now need to move the web app source code itself
+	message = fmt.Sprintf("%s moving web app source code...", yellow(" ->"))
+	verbosePrint(message, settings)
+
 	cleanPath := filepath.Clean(plj.getLocalWebpath())
 	safeName := strings.ReplaceAll(strings.Trim(cleanPath, "/"), "/", "-")
 	name = fmt.Sprintf("%s/%s", versionbackup, safeName)
 	err = os.Rename(plj.getLocalWebpath(), name)
 	if err != nil {
-		return fmt.Errorf("cannot backup web path %s: %w", plj.getLocalWebpath(), err)
+		return fmt.Errorf("%s - cannot backup %s", red("ERROR"), plj.getLocalWebpath())
 	}
 
 	// Now compress it to a compressed file (.tar.gz)
-	fmt.Println("Compressing backup...")
+	message = fmt.Sprintf("%s compressing backup...", yellow(" ->"))
+	verbosePrint(message, settings)
 
 	tarballPath := fmt.Sprintf("%s.tar.gz", versionbackup)
 
 	// Create tarball
+
+	message = fmt.Sprintf("%s creating tarball...", yellow(" ->"))
+	verbosePrint(message, settings)
+
 	cmd := exec.Command("tar", "-czf", tarballPath, "-C", cfg.getBackupPath(), resultversion.getCurrentWebAppVersion())
 	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("failed to create tarball: %w\n", err)
+		return fmt.Errorf("%s - failed to create tarball", red("ERROR"))
 	}
 
 	// Now remove the normal backup folder
 	// So the leftover uncompressed folder
+	message = fmt.Sprintf("%s cleaning up...", yellow(" ->"))
+	verbosePrint(message, settings)
+
 	err = os.RemoveAll(versionbackup)
 	if err != nil {
-		return fmt.Errorf("cannot remove %s %w\n", versionbackup, err)
+		return fmt.Errorf("%s cannot remove %s", red("ERROR"), versionbackup)
 	}
+
+	fmt.Printf("%s %s %s backup completed successfully\n", green("===>"), plj.getName(), resultversion.getCurrentWebAppVersion())
 
 	return nil
 }

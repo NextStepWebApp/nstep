@@ -34,7 +34,7 @@ func getUidGid(group string) (uid int, gid int, err error) {
 	return uid, gid, nil
 }
 
-func copyDir(src, dst string) error {
+func copyDir(src, dst string, settings settingsConfig) error {
 	if err := os.MkdirAll(dst, 0755); err != nil {
 		return fmt.Errorf("cannot create destination directory: %w", err)
 	}
@@ -50,12 +50,12 @@ func copyDir(src, dst string) error {
 
 		if entry.IsDir() {
 			// Recursively copy subdirectory
-			if err := copyDir(srcPath, dstPath); err != nil {
+			if err := copyDir(srcPath, dstPath, settings); err != nil {
 				return err
 			}
 		} else {
 			// Copy file
-			if err := copyFile(srcPath, dstPath); err != nil {
+			if err := copyFile(srcPath, dstPath, settings); err != nil {
 				return err
 			}
 		}
@@ -64,7 +64,7 @@ func copyDir(src, dst string) error {
 	return nil
 }
 
-func copyFile(src, dst string) error {
+func copyFile(src, dst string, settings settingsConfig) error {
 	srcFile, err := os.Open(src)
 	if err != nil {
 		return err
@@ -79,7 +79,8 @@ func copyFile(src, dst string) error {
 	defer dstFile.Close()
 
 	_, err = io.Copy(dstFile, srcFile)
-	fmt.Printf("Copy %s -> %s\n", srcFile.Name(), dstFile.Name())
+	message := fmt.Sprintf("%s %s -> %s", cyan("  - copy"), srcFile.Name(), dstFile.Name())
+	verbosePrint(message, settings)
 
 	return err
 }
@@ -118,7 +119,7 @@ func powerHandler(err error) {
 func moveFile(oldPath, newPath string) error {
 	err := os.Rename(oldPath, newPath)
 	if err != nil {
-		return fmt.Errorf("failed to move %s to %s: %w", oldPath, newPath, err)
+		return err
 	}
 	return nil
 }

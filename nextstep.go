@@ -40,7 +40,6 @@ func nextStepSetup(cfg config, resultversion *versionCheck, plj *packageLocalJso
 		if sourceDir != nil {
 			return fmt.Errorf("internal error: install command, but source directory is not equal to nil")
 		}
-		fmt.Println("==> Installation setup...")
 
 	// Alreaddy installed
 	case setupStatus == true && commandStatus == "install":
@@ -51,7 +50,6 @@ func nextStepSetup(cfg config, resultversion *versionCheck, plj *packageLocalJso
 		if sourceDir != nil {
 			return fmt.Errorf("internal error: update command, but source directory is not equal to nil")
 		}
-		fmt.Println("==> Update setup...")
 
 	// Invalid rollback use, needs to install first
 	case setupStatus == false && commandStatus == "rollback":
@@ -94,13 +92,13 @@ func nextStepSetup(cfg config, resultversion *versionCheck, plj *packageLocalJso
 		}
 
 		// get the current version to the web portal
-		err = copyDir(currentfilepath, plj.getLocalWebpath())
+		err = copyDir(currentfilepath, plj.getLocalWebpath(), settings)
 		if err != nil {
 			return fmt.Errorf("cannot copy current to webpath %w", err)
 		}
 
 		// put the config files etc in the right place and remove unused files in the web portal
-		err = setupMovesInstallUpdate("install", plj)
+		err = setupMovesInstallUpdate("install", plj, settings)
 		if err != nil {
 			return fmt.Errorf("cannot do the setup moves %w", err)
 		}
@@ -116,11 +114,11 @@ func nextStepSetup(cfg config, resultversion *versionCheck, plj *packageLocalJso
 		}
 
 		// get the current version to the web portal
-		err = copyDir(currentfilepath, plj.getLocalWebpath())
+		err = copyDir(currentfilepath, plj.getLocalWebpath(), settings)
 		if err != nil {
 			return fmt.Errorf("cannot copy current to webpath %w", err)
 		}
-		err = setupMovesInstallUpdate("update", plj)
+		err = setupMovesInstallUpdate("update", plj, settings)
 		if err != nil {
 			return fmt.Errorf("cannot do the setup moves %w", err)
 		}
@@ -134,7 +132,7 @@ func nextStepSetup(cfg config, resultversion *versionCheck, plj *packageLocalJso
 		// Name the currentfilepath for rollback
 		// sourceDir is passed throug the function
 		currentfilepath := *sourceDir
-		err = setupMovesRollback(currentfilepath)
+		err = setupMovesRollback(currentfilepath, settings)
 		if err != nil {
 			return fmt.Errorf("cannot do the setup moves %w", err)
 		}
