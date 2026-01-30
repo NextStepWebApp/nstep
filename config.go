@@ -67,6 +67,7 @@ func (c config) getCurrentPath() string {
 // function to see if the dirs are available,
 // if not create them
 func (c config) diravailable(settings settingsConfig) error {
+	var err error
 	paths := []string{
 		c.getDownloadPath(),
 		c.getVersionPath(),
@@ -75,7 +76,15 @@ func (c config) diravailable(settings settingsConfig) error {
 	}
 	fmt.Printf("%s Required directory setup...\n", green("===>"))
 	for _, path := range paths {
-		err := os.MkdirAll(path, os.FileMode(settings.getSettingPermissionDir()))
+		// Check if exists
+		_, err = os.Stat(path)
+		if err == nil {
+			message := fmt.Sprintf("%s %s already exists", yellow(" ->"), path)
+			verbosePrint(message, settings)
+			continue
+		}
+
+		err = os.MkdirAll(path, os.FileMode(settings.getSettingPermissionDir()))
 		if err != nil {
 			return fmt.Errorf("%s - cannot create %s", red("ERROR"), path)
 		} else {
