@@ -44,6 +44,11 @@ func updateAllComponents(cfg config, settings settingsConfig, plj *packageLocalJ
 
 	fmt.Printf("%s Component setup...\n", green("===>"))
 
+	// Check
+	if !resultversion.isUpdatePackageAvailable() && !resultversion.isUpdateWebAppAvailable() {
+		return "", fmt.Errorf("%s - already up to date", yellow("Warning"))
+	}
+
 	// Update package if available
 	if resultversion.isUpdatePackageAvailable() {
 		err := onlineToLocalPackage(cfg, resultversion, settings)
