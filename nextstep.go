@@ -90,6 +90,9 @@ func nextStepSetup(cfg config, resultversion *versionCheck, plj *packageLocalJso
 			return err
 		}
 
+		message := fmt.Sprintf("%s copying files...", yellow(" ->"))
+		verbosePrint(message, settings)
+
 		// get the current version to the web portal
 		err = copyDir(currentfilepath, plj.getLocalWebpath(), settings)
 		if err != nil {
