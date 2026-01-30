@@ -26,12 +26,12 @@ func nextStepSetup(cfg config, resultversion *versionCheck, plj *packageLocalJso
 	// These are environment checks
 
 	setupStatus := false
-	_, err = os.ReadDir(plj.getLocalWebpath())
+	_, err = os.Stat(plj.getLocalWebpath())
 	if err != nil {
 		if os.IsNotExist(err) {
 			setupStatus = false //install
 		} else {
-			return fmt.Errorf("cannot check installation status: %w", err)
+			return fmt.Errorf("%s - cannot check installation status", red("ERROR"))
 		}
 	} else {
 		setupStatus = true //update
