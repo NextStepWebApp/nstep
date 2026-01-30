@@ -35,7 +35,7 @@ func installNextStep(plj *packageLocalJson, cfg config, settings settingsConfig,
 		return fmt.Errorf("%s -  cannot execute nextstep install script", red("ERROR"))
 	}
 
-	fmt.Printf("%s %s installation completed successfully", green("===>"), plj.getName())
+	fmt.Printf("%s %s installation completed successfully\n", green("===>"), plj.getName())
 
 	return nil
 }
