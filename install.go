@@ -23,6 +23,9 @@ func installNextStep(plj *packageLocalJson, cfg config, settings settingsConfig,
 
 	// Run the setup_nextstep.sh script
 	// This is for manipulating files and starting services
+
+	fmt.Printf("%s Execute setup script\n", green("===>"))
+
 	installScript := plj.getNextStepInstallScript()
 	cmd := exec.Command("bash", installScript)
 
@@ -34,6 +37,8 @@ func installNextStep(plj *packageLocalJson, cfg config, settings settingsConfig,
 	if err = cmd.Run(); err != nil {
 		return fmt.Errorf("%s -  cannot execute nextstep install script", red("ERROR"))
 	}
+
+	fmt.Printf("%s Setup script executed successfully\n", green("===>"))
 
 	fmt.Printf("%s %s installation completed successfully\n", green("===>"), plj.getName())
 

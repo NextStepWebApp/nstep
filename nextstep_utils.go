@@ -42,7 +42,7 @@ func setupMovesRollback(currentfilepath string, settings settingsConfig) error {
 func updateAllComponents(cfg config, settings settingsConfig, plj *packageLocalJson, resultversion *versionCheck) (currentwebpath string, err error) {
 	startNow := time.Now()
 
-	fmt.Printf("%s Component setup...\n", green("===>"))
+	fmt.Printf("%s Component setup...\n", hiyellow("==>"))
 
 	// Check
 	if !resultversion.isUpdatePackageAvailable() && !resultversion.isUpdateWebAppAvailable() {
@@ -65,10 +65,10 @@ func updateAllComponents(cfg config, settings settingsConfig, plj *packageLocalJ
 		}
 	}
 
-	message := fmt.Sprintf("%s This operation took: %v", yellow(" ->"), time.Since(startNow))
+	message := fmt.Sprintf("%s This operation took: %v", yellow("  ->"), time.Since(startNow))
 	verbosePrint(message, settings)
 
-	fmt.Printf("%s Component setup finished successfully\n", green("===>"))
+	fmt.Printf("%s Component setup finished successfully\n", hiyellow("==>"))
 
 	return currentwebpath, nil
 }
@@ -82,7 +82,7 @@ func onlineToLocalPackage(cfg config, resultversion *versionCheck, settings sett
 		return fmt.Errorf("cannot download %s to %s", packageUrl, packagePath)
 	}
 
-	message := fmt.Sprintf("%s %s downloaded successfully", yellow(" ->"), getPackageName(cfg))
+	message := fmt.Sprintf("%s %s downloaded successfully", yellow("  ->"), getPackageName(cfg))
 	verbosePrint(message, settings)
 	return nil
 }
@@ -100,7 +100,7 @@ func onlineToLocalWebApp(cfg config, plj *packageLocalJson, resultversion *versi
 		return "", fmt.Errorf("cannot download %s", plj.getName())
 	}
 
-	message = fmt.Sprintf("%s %s downloaded successfully", yellow(" ->"), plj.getName())
+	message = fmt.Sprintf("%s %s downloaded successfully", yellow("  ->"), plj.getName())
 	verbosePrint(message, settings)
 
 	// Verifying package integrity
@@ -109,7 +109,7 @@ func onlineToLocalWebApp(cfg config, plj *packageLocalJson, resultversion *versi
 		return "", fmt.Errorf("%s verification failed", plj.getName())
 	}
 
-	message = fmt.Sprintf("%s %s verified successfully", yellow(" ->"), plj.getName())
+	message = fmt.Sprintf("%s %s verified successfully", yellow("  ->"), plj.getName())
 	verbosePrint(message, settings)
 
 	// Extract the downloaded package
@@ -121,7 +121,7 @@ func onlineToLocalWebApp(cfg config, plj *packageLocalJson, resultversion *versi
 	if err != nil {
 		return "", fmt.Errorf("error extracting %s", plj.getName())
 	}
-	message = fmt.Sprintf("%s %s extracted successfully", yellow(" ->"), plj.getName())
+	message = fmt.Sprintf("%s %s extracted successfully", yellow("  ->"), plj.getName())
 	verbosePrint(message, settings)
 
 	// Symlink the new version to the current one
@@ -158,9 +158,9 @@ func setupMovesInstallUpdate(commandStatus string, plj *packageLocalJson, settin
 		dirsToRemove = plj.getUpdateRemoves()
 	}
 
-	fmt.Printf("%s install/update setup...\n", green("===>"))
+	fmt.Printf("%s install/update setup...\n", hiyellow("==>"))
 
-	message = fmt.Sprintf("%s moving files", yellow(" ->"))
+	message = fmt.Sprintf("%s moving files", yellow("  ->"))
 	verbosePrint(message, settings)
 
 	// Execute all moves
@@ -181,7 +181,7 @@ func setupMovesInstallUpdate(commandStatus string, plj *packageLocalJson, settin
 		verbosePrint(message, settings)
 	}
 
-	message = fmt.Sprintf("%s removing directories", yellow(" ->"))
+	message = fmt.Sprintf("%s removing directories", yellow("  ->"))
 	verbosePrint(message, settings)
 
 	// Remove directories
@@ -190,10 +190,11 @@ func setupMovesInstallUpdate(commandStatus string, plj *packageLocalJson, settin
 		if err != nil {
 			return fmt.Errorf("%s - removing %s", red("ERROR"), dir)
 		}
-		fmt.Printf("%s %s\n", red("  - remove"), dir)
+		message = fmt.Sprintf("%s %s\n", red("  - remove"), dir)
+		verbosePrint(message, settings)
 	}
 
-	fmt.Printf("%s install/update setup finished successfully\n", green("===>"))
+	fmt.Printf("%s install/update setup finished successfully\n", hiyellow("==>"))
 
 	return nil
 }
@@ -277,7 +278,7 @@ func nextstepPermissionManager(moveAction moveAction) error {
 func nextStepCreate(plj *packageLocalJson, settings settingsConfig) error {
 	var err error
 
-	fmt.Printf("%s %s required directory setup\n", green("===>"), plj.getName())
+	fmt.Printf("%s %s required directory setup\n", hiyellow("==>"), plj.getName())
 
 	// Make the required directories with the write permissions and ownerships
 	dirs := plj.getRequiredDirInfo()
@@ -292,7 +293,7 @@ func nextStepCreate(plj *packageLocalJson, settings settingsConfig) error {
 		}
 	}
 
-	fmt.Printf("%s %s required directory setup completed successfully\n", green("===>"), plj.getName())
+	fmt.Printf("%s %s required directory setup completed successfully\n", hiyellow("==>"), plj.getName())
 
 	return nil
 }
@@ -302,7 +303,7 @@ func nextStepBackup(cfg config, resultversion *versionCheck, settings settingsCo
 	var err error
 	var name, message string
 
-	fmt.Printf("%s %s %s backup...\n", green("===>"), plj.getName(), resultversion.getCurrentWebAppVersion())
+	fmt.Printf("%s %s %s backup...\n", hiyellow("==>"), plj.getName(), resultversion.getCurrentWebAppVersion())
 
 	// make the version directory
 	versionbackup := fmt.Sprintf("%s/%s", cfg.getBackupPath(), resultversion.getCurrentWebAppVersion())
@@ -327,7 +328,7 @@ func nextStepBackup(cfg config, resultversion *versionCheck, settings settingsCo
 		// Before I had rename, but this in a way resets the web app
 		// So it needs to be copy
 
-		message = fmt.Sprintf("%s copying directories", yellow(" ->"))
+		message = fmt.Sprintf("%s copying directories", yellow("  ->"))
 		verbosePrint(message, settings)
 
 		err = copyDir(dir.Dir, name, settings)
@@ -337,7 +338,7 @@ func nextStepBackup(cfg config, resultversion *versionCheck, settings settingsCo
 	}
 
 	// Now need to move the web app source code itself
-	message = fmt.Sprintf("%s moving web app source code...", yellow(" ->"))
+	message = fmt.Sprintf("%s moving web app source code...", yellow("  ->"))
 	verbosePrint(message, settings)
 
 	cleanPath := filepath.Clean(plj.getLocalWebpath())
@@ -349,14 +350,14 @@ func nextStepBackup(cfg config, resultversion *versionCheck, settings settingsCo
 	}
 
 	// Now compress it to a compressed file (.tar.gz)
-	message = fmt.Sprintf("%s compressing backup...", yellow(" ->"))
+	message = fmt.Sprintf("%s compressing backup...", yellow("  ->"))
 	verbosePrint(message, settings)
 
 	tarballPath := fmt.Sprintf("%s.tar.gz", versionbackup)
 
 	// Create tarball
 
-	message = fmt.Sprintf("%s creating tarball...", yellow(" ->"))
+	message = fmt.Sprintf("%s creating tarball...", yellow("  ->"))
 	verbosePrint(message, settings)
 
 	cmd := exec.Command("tar", "-czf", tarballPath, "-C", cfg.getBackupPath(), resultversion.getCurrentWebAppVersion())
@@ -366,7 +367,7 @@ func nextStepBackup(cfg config, resultversion *versionCheck, settings settingsCo
 
 	// Now remove the normal backup folder
 	// So the leftover uncompressed folder
-	message = fmt.Sprintf("%s cleaning up...", yellow(" ->"))
+	message = fmt.Sprintf("%s cleaning up...", yellow("  ->"))
 	verbosePrint(message, settings)
 
 	err = os.RemoveAll(versionbackup)
@@ -374,7 +375,7 @@ func nextStepBackup(cfg config, resultversion *versionCheck, settings settingsCo
 		return fmt.Errorf("%s cannot remove %s", red("ERROR"), versionbackup)
 	}
 
-	fmt.Printf("%s %s %s backup completed successfully\n", green("===>"), plj.getName(), resultversion.getCurrentWebAppVersion())
+	fmt.Printf("%s %s %s backup completed successfully\n", hiyellow("==>"), plj.getName(), resultversion.getCurrentWebAppVersion())
 
 	return nil
 }

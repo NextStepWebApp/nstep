@@ -36,7 +36,8 @@ func getUidGid(group string) (uid int, gid int, err error) {
 
 func copyDir(src, dst string, settings settingsConfig) error {
 
-	fmt.Printf("%s copy setup...\n", yellow(" ->"))
+	message := fmt.Sprintf("%s copy setup...\n", yellow(" ->"))
+	verbosePrint(message, settings)
 
 	if err := os.MkdirAll(dst, 0755); err != nil {
 		return fmt.Errorf("%s - cannot create %s", red("ERROR"), dst)

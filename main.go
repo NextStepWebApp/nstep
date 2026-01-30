@@ -13,11 +13,12 @@ const (
 )
 
 var (
-	yellow = color.New(color.FgYellow, color.Bold).SprintFunc()
-	red    = color.New(color.FgRed, color.Bold).SprintFunc()
-	green  = color.New(color.FgGreen, color.Bold).SprintFunc()
-	blue   = color.New(color.FgBlue, color.Bold).SprintFunc()
-	cyan   = color.New(color.FgCyan, color.Bold).SprintFunc()
+	yellow   = color.New(color.FgYellow, color.Bold).SprintFunc()
+	red      = color.New(color.FgRed, color.Bold).SprintFunc()
+	green    = color.New(color.FgGreen, color.Bold).SprintFunc()
+	blue     = color.New(color.FgBlue, color.Bold).SprintFunc()
+	cyan     = color.New(color.FgCyan, color.Bold).SprintFunc()
+	hiyellow = color.New(color.FgHiYellow, color.Bold).SprintFunc()
 )
 
 func main() {
