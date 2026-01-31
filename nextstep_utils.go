@@ -190,7 +190,7 @@ func setupMovesInstallUpdate(commandStatus string, plj *packageLocalJson, settin
 		if err != nil {
 			return fmt.Errorf("%s - removing %s", red("ERROR"), dir)
 		}
-		message = fmt.Sprintf("%s %s\n", red("  - remove"), dir)
+		message = fmt.Sprintf("%s %s", red("  - remove"), dir)
 		verbosePrint(message, settings)
 	}
 
