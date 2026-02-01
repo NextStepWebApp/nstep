@@ -79,12 +79,15 @@ func main() {
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
-	}
-	// Validate the package.json
-	err = validatePermissionManager(plj, settings)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
+	} else {
+		// Validate the package.json
+		err = validatePermissionManager(plj, settings)
+		if err != nil {
+			message := fmt.Sprintf("%s - cannot load %s", red("ERROR"), getPackageName(cfg))
+			fmt.Fprintln(os.Stderr, message)
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
 	}
 
 	// nstep commands

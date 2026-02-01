@@ -126,7 +126,7 @@ func convertDecimalToOctalPermission(permission int) (int, error) {
 	permissionString := fmt.Sprintf("%d", permission)
 	octalValue, err := strconv.ParseUint(permissionString, 8, 32)
 	if err != nil {
-		return 0, fmt.Errorf("%s - cannot convert decimal number to octal", red("ERROR"))
+		return 0, fmt.Errorf("%s - cannot convert decimal number (%d) to octal (%d)", red("ERROR"), permission, int(octalValue))
 	}
 	return int(octalValue), nil
 }
