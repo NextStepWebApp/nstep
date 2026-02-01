@@ -7,3 +7,6 @@ files = 644
 directories = 755
 executables = 755
 sensitive = 600
+
+[shell]
+shell = "bash"

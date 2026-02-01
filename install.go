@@ -27,7 +27,8 @@ func installNextStep(plj *packageLocalJson, cfg config, settings settingsConfig,
 	fmt.Printf("%s Execute setup script\n", hiyellow("==>"))
 
 	installScript := plj.getNextStepInstallScript()
-	cmd := exec.Command("bash", installScript)
+	shell := settings.getSettingShell()
+	cmd := exec.Command(shell, installScript)
 
 	if settings.getOutputStatus() {
 		cmd.Stdout = os.Stdout

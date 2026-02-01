@@ -19,6 +19,32 @@ type settingsConfig struct {
 			Sensitive int `toml:"sensitive"`
 		} `toml:"defaults"`
 	} `toml:"permissions"`
+
+	Shell struct {
+		Shell string `toml:"shell"`
+	} `toml:"shell"`
+}
+
+func (s settingsConfig) validateSettingShell() error {
+	validShells := []string{"bash", "zsh", "fish"}
+	shell := s.getSettingShell()
+
+	isValid := false
+	for _, validShell := range validShells {
+		if shell == validShell {
+			isValid = true
+		}
+	}
+
+	if !isValid {
+		return fmt.Errorf("%s - invalid shell %s in settings", red("ERROR"), yellow(shell))
+	}
+
+	return nil
+}
+
+func (s settingsConfig) getSettingShell() string {
+	return s.Shell.Shell
 }
 
 func (s settingsConfig) getOutputStatus() bool {
