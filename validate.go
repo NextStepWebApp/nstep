@@ -57,25 +57,13 @@ func validatePermissionNumbers(permission *int, defaultFileType string, setting 
 
 	switch defaultFileType {
 	case "file":
-		defaultPermission, err = convertDecimalToOctalPermission(setting.getSettingPermissionFile())
-		if err != nil {
-			return err
-		}
+		defaultPermission = setting.getSettingPermissionFile()
 	case "dir":
-		defaultPermission, err = convertDecimalToOctalPermission(setting.getSettingPermissionDir())
-		if err != nil {
-			return err
-		}
+		defaultPermission = setting.getSettingPermissionDir()
 	case "exec":
-		defaultPermission, err = convertDecimalToOctalPermission(setting.getSettingsPermissionExec())
-		if err != nil {
-			return err
-		}
+		defaultPermission = setting.getSettingsPermissionExec()
 	case "sensitive":
-		defaultPermission, err = convertDecimalToOctalPermission(setting.getSettingsPermissionSensitive())
-		if err != nil {
-			return err
-		}
+		defaultPermission = setting.getSettingsPermissionSensitive()
 	default:
 		return fmt.Errorf("%s - internal code error, wrong use of function", red("ERROR"))
 	}
@@ -92,7 +80,10 @@ func validatePermissionNumbers(permission *int, defaultFileType string, setting 
 		if digit < 0 || digit > 7 {
 			message := fmt.Sprintf("%s - wrong permission number, defaulting to %d", yellow("Warning"), defaultPermission)
 			*warnings = append(*warnings, message)
-			*permission = defaultPermission
+			*permission, err = convertDecimalToOctalPermission(defaultPermission)
+			if err != nil {
+				return err
+			}
 			return nil
 		}
 		nums = append(nums, digit)
@@ -103,14 +94,14 @@ func validatePermissionNumbers(permission *int, defaultFileType string, setting 
 	if len(nums) == 3 {
 		nums = append(nums, 0)
 		reverse(nums)
-		*permission = arrayToInt(nums)
+		*permission, err = convertDecimalToOctalPermission(arrayToInt(nums))
 		return nil
 	} else if len(nums) == 4 {
 		// Check the special permission digit (should be 0 for basic permissions)
 		if nums[len(nums)-1] != 0 {
 			message := fmt.Sprintf("%s - special permission bits not supported, defaulting to %d", yellow("Warning"), defaultPermission)
 			*warnings = append(*warnings, message)
-			*permission = defaultPermission
+			*permission, err = convertDecimalToOctalPermission(defaultPermission)
 		}
 		return nil
 	}
@@ -118,7 +109,7 @@ func validatePermissionNumbers(permission *int, defaultFileType string, setting 
 	// Invalid length
 	message := fmt.Sprintf("%s - invalid permission format, defaulting to %d", yellow("Warning"), defaultPermission)
 	*warnings = append(*warnings, message)
-	*permission = defaultPermission
+	*permission, err = convertDecimalToOctalPermission(defaultPermission)
 	return nil
 }
 
