@@ -19,6 +19,7 @@ var (
 	blue     = color.New(color.FgBlue, color.Bold).SprintFunc()
 	cyan     = color.New(color.FgCyan, color.Bold).SprintFunc()
 	hiyellow = color.New(color.FgHiYellow, color.Bold).SprintFunc()
+	//magenta  = color.New(color.FgMagenta, color.Bold).SprintFunc()
 )
 
 func main() {

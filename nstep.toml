@@ -3,7 +3,7 @@
 verbose = true
 
 [permissions.defaults]
-files = 0o644
-directories = 0o755
-executables = 0o755
-sensitive = 0o600
+files = 644
+directories = 755
+executables = 755
+sensitive = 600
