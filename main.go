@@ -80,6 +80,12 @@ func main() {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
+	// Validate the package.json
+	err = validatePermissionManager(plj, settings)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
 
 	// nstep commands
 	switch command {

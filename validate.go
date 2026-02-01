@@ -1,12 +1,11 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
-	"os"
+	"strconv"
 )
 
-func validatePermissionManager(cfg config, plj *packageLocalJson, settings settingsConfig) error {
+func validatePermissionManager(plj *packageLocalJson, settings settingsConfig) error {
 	var err error
 	warnings := make([]string, 0, 10)
 
@@ -14,7 +13,7 @@ func validatePermissionManager(cfg config, plj *packageLocalJson, settings setti
 	for _, dir := range plj.getRequiredDirInfo() {
 		err = validatePermissionNumbers(&dir.Permission, "dir", settings, &warnings)
 		if err != nil {
-			return fmt.Errorf("%w", err)
+			return err
 		}
 	}
 
@@ -22,7 +21,7 @@ func validatePermissionManager(cfg config, plj *packageLocalJson, settings setti
 	for _, dir := range plj.getUpdateMoveActions() {
 		err = validatePermissionNumbers(&dir.Permissions, "file", settings, &warnings)
 		if err != nil {
-			return fmt.Errorf("%w", err)
+			return err
 		}
 	}
 
@@ -30,7 +29,7 @@ func validatePermissionManager(cfg config, plj *packageLocalJson, settings setti
 	for _, dir := range plj.getInstallMoveActions() {
 		err = validatePermissionNumbers(&dir.Permissions, "file", settings, &warnings)
 		if err != nil {
-			return fmt.Errorf("%w", err)
+			return err
 		}
 	}
 
@@ -38,7 +37,7 @@ func validatePermissionManager(cfg config, plj *packageLocalJson, settings setti
 		for _, warning := range warnings {
 			fmt.Println(warning)
 		}
-		data, err := json.MarshalIndent(plj, "", "  ")
+		/*data, err := json.MarshalIndent(plj, "", "  ")
 		if err != nil {
 			return fmt.Errorf("cannot marshal plj: %w", err)
 		}
@@ -46,22 +45,37 @@ func validatePermissionManager(cfg config, plj *packageLocalJson, settings setti
 		if err != nil {
 			return fmt.Errorf("cannot write plj file: %w", err)
 		}
+		*/
 	}
 	return nil
 }
 
 func validatePermissionNumbers(permission *int, defaultFileType string, setting settingsConfig, warnings *[]string) error {
 	// File type check
-	var defaultPerm int
+	var defaultPermission int
+	var err error
+
 	switch defaultFileType {
 	case "file":
-		defaultPerm = setting.getSettingPermissionFile()
+		defaultPermission, err = convertDecimalToOctalPermission(setting.getSettingPermissionFile())
+		if err != nil {
+			return err
+		}
 	case "dir":
-		defaultPerm = setting.getSettingPermissionDir()
+		defaultPermission, err = convertDecimalToOctalPermission(setting.getSettingPermissionDir())
+		if err != nil {
+			return err
+		}
 	case "exec":
-		defaultPerm = setting.getSettingsPermissionExec()
+		defaultPermission, err = convertDecimalToOctalPermission(setting.getSettingsPermissionExec())
+		if err != nil {
+			return err
+		}
 	case "sensitive":
-		defaultPerm = setting.getSettingsPermissionSensitive()
+		defaultPermission, err = convertDecimalToOctalPermission(setting.getSettingsPermissionSensitive())
+		if err != nil {
+			return err
+		}
 	default:
 		return fmt.Errorf("%s - internal code error, wrong use of function", red("ERROR"))
 	}
@@ -76,9 +90,9 @@ func validatePermissionNumbers(permission *int, defaultFileType string, setting 
 	for temp > 0 {
 		digit := temp % 10
 		if digit < 0 || digit > 7 {
-			message := fmt.Sprintf("%s - wrong permission number, defaulting to %d", yellow("Warning"), defaultPerm)
+			message := fmt.Sprintf("%s - wrong permission number, defaulting to %d", yellow("Warning"), defaultPermission)
 			*warnings = append(*warnings, message)
-			*permission = defaultPerm
+			*permission = defaultPermission
 			return nil
 		}
 		nums = append(nums, digit)
@@ -94,16 +108,25 @@ func validatePermissionNumbers(permission *int, defaultFileType string, setting 
 	} else if len(nums) == 4 {
 		// Check the special permission digit (should be 0 for basic permissions)
 		if nums[len(nums)-1] != 0 {
-			message := fmt.Sprintf("%s - special permission bits not supported, defaulting to %d", yellow("Warning"), defaultPerm)
+			message := fmt.Sprintf("%s - special permission bits not supported, defaulting to %d", yellow("Warning"), defaultPermission)
 			*warnings = append(*warnings, message)
-			*permission = defaultPerm
+			*permission = defaultPermission
 		}
 		return nil
 	}
 
 	// Invalid length
-	message := fmt.Sprintf("%s - invalid permission format, defaulting to %d", yellow("Warning"), defaultPerm)
+	message := fmt.Sprintf("%s - invalid permission format, defaulting to %d", yellow("Warning"), defaultPermission)
 	*warnings = append(*warnings, message)
-	*permission = defaultPerm
+	*permission = defaultPermission
 	return nil
+}
+
+func convertDecimalToOctalPermission(permission int) (int, error) {
+	permissionString := fmt.Sprintf("%d", permission)
+	octalValue, err := strconv.ParseUint(permissionString, 8, 32)
+	if err != nil {
+		return 0, fmt.Errorf("%s - cannot convert decimal number to octal", red("ERROR"))
+	}
+	return int(octalValue), nil
 }
