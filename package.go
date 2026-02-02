@@ -32,6 +32,7 @@ type nextStep struct {
 
 type requiredDirInfo struct {
 	Dir        string `json:"dir"`
+	Group      string `json:"group"`
 	Permission int    `json:"permission"`
 }
 

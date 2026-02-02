@@ -287,10 +287,19 @@ func nextStepCreate(plj *packageLocalJson, settings settingsConfig) error {
 		err = os.MkdirAll(dir.Dir, os.FileMode(dir.Permission))
 		if err != nil {
 			return fmt.Errorf("%s - cannot create directory %s", red("ERROR"), dir.Dir)
-		} else {
-			message := fmt.Sprintf("%s created %s", yellow(" ->"), dir.Dir)
-			verbosePrint(message, settings)
 		}
+
+		uid, gid, err := getUidGid(dir.Group)
+		if err != nil {
+			return err
+		}
+		err = os.Chown(dir.Dir, uid, gid)
+		if err != nil {
+			return err
+		}
+
+		message := fmt.Sprintf("%s created %s", yellow(" ->"), dir.Dir)
+		verbosePrint(message, settings)
 	}
 
 	fmt.Printf("%s %s required directory setup completed successfully\n", hiyellow("==>"), plj.getName())
