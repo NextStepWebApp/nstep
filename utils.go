@@ -73,7 +73,8 @@ func copyFile(src, dst string, settings settingsConfig) error {
 	defer srcFile.Close()
 
 	// Create destination file
-	dstFile, err := os.Create(dst)
+	dstFile, err := os.OpenFile(dst, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0755)
+
 	if err != nil {
 		return err
 	}
