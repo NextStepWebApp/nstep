@@ -111,6 +111,7 @@ The name nstep comes from the NextStep web application that the package manager 
 - Add plugin support (initially monolithic style, later support for external plugins)
 - Multi-package manager support
 - Polish the current state and complete unfinished commands
+- Add a database migration system, to support database changes of web app updates
 
 nstep will allow NextStep developers to keep pushing updates to a locally hosted alumni system with ease.
 
