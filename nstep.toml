@@ -10,3 +10,7 @@ sensitive = 600
 
 [shell]
 shell = "bash"
+
+[composer]
+command = "composer install --no-dev --optimize-autoloader"
+dir = "/srv/http/NextStep"

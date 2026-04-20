@@ -104,10 +104,18 @@ func nextStepSetup(cfg config, resultversion *versionCheck, plj *packageLocalJso
 		if err != nil {
 			return err
 		}
+
+		// composer command execution
+		err = composerSetupWebApp(settings)
+		if err != nil {
+			return err
+		}
+
 	case "update":
 		currentfilepath, err := updateAllComponents(cfg, settings, plj, resultversion)
 		if err != nil {
-			return fmt.Errorf("%w", err)
+			//return fmt.Errorf("%w", err)
+			return err
 		}
 
 		err = nextStepBackup(cfg, resultversion, settings, plj)
@@ -123,6 +131,12 @@ func nextStepSetup(cfg config, resultversion *versionCheck, plj *packageLocalJso
 		err = setupMovesInstallUpdate("update", plj, settings)
 		if err != nil {
 			return fmt.Errorf("cannot do the setup moves %w", err)
+		}
+
+		// composer command execution
+		err = composerSetupWebApp(settings)
+		if err != nil {
+			return err
 		}
 
 	case "rollback":

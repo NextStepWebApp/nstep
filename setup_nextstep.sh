@@ -16,12 +16,6 @@ installpackage() {
 
 installpackage php php-sqlite php-fpm apache python composer
 
-# This is temporary hardcoded solution!!!!!
-# install composer phpmailer
-cd /srv/http/NextStep
-composer install --no-dev --optimize-autoloader
-cd -
-# End composer install
 
 systemctl enable httpd.service
 

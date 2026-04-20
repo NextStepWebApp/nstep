@@ -12,6 +12,22 @@ import (
 // This files is for all the functions that are spessifically for nextstep.go
 // To make the lines of code of nextstep.go smaller and better to read
 
+func composerSetupWebApp(settings settingsConfig) error {
+	cmd := exec.Command(settings.getComposerCommand())
+	cmd.Dir = settings.getComposerDir()
+
+	if settings.getOutputStatus() {
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+	}
+
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("%s -  composer setup failed", red("ERROR"))
+	}
+
+	return nil
+}
+
 func setupMovesRollback(currentfilepath string, settings settingsConfig) error {
 
 	entries, err := os.ReadDir(currentfilepath)

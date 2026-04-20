@@ -23,6 +23,11 @@ type settingsConfig struct {
 	Shell struct {
 		Shell string `toml:"shell"`
 	} `toml:"shell"`
+
+	Composer struct {
+		Command string `toml:"command"`
+		Dir     string `toml:"dir"`
+	} `toml:"composer"`
 }
 
 func (s settingsConfig) validateSettingShell() error {
@@ -41,6 +46,14 @@ func (s settingsConfig) validateSettingShell() error {
 	}
 
 	return nil
+}
+
+func (s settingsConfig) getComposerCommand() string {
+	return s.Composer.Command
+}
+
+func (s settingsConfig) getComposerDir() string {
+	return s.Composer.Dir
 }
 
 func (s settingsConfig) getSettingShell() string {
