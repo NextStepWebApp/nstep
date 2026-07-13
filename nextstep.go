@@ -12,7 +12,7 @@ func nextStepSetup(cfg config, resultversion *versionCheck, plj *packageLocalJso
 	// Nstep lock check
 	lockfile, err := lockNstep(cfg)
 	if err != nil {
-		return fmt.Errorf("Error update.lock %w", err)
+		return fmt.Errorf("error update.lock %w", err)
 	}
 	defer lockfile.Close()
 	defer os.Remove(cfg.getLockFilePath())
@@ -29,18 +29,18 @@ func nextStepSetup(cfg config, resultversion *versionCheck, plj *packageLocalJso
 	_, err = os.Stat(plj.getLocalWebpath())
 	if err != nil {
 		if os.IsNotExist(err) {
-			setupStatus = false //install
+			setupStatus = false // install
 		} else {
 			return fmt.Errorf("%s - cannot check installation status", red("ERROR"))
 		}
 	} else {
-		setupStatus = true //update
+		setupStatus = true // update
 	}
 
 	switch {
 
 	// So a broken update setup
-	case setupStatus == false && commandStatus == "update":
+	case !setupStatus && commandStatus == "update":
 		return fmt.Errorf("command given is update system says install, run 'sudo nstep install'")
 
 	// Working installation
@@ -106,10 +106,10 @@ func nextStepSetup(cfg config, resultversion *versionCheck, plj *packageLocalJso
 		}
 
 		// composer command execution
-		err = composerSetupWebApp(settings)
-		if err != nil {
-			return err
-		}
+		// err = composerSetupWebApp(settings)
+		// if err != nil {
+	//		return err
+	//	}
 
 	case "update":
 		currentfilepath, err := updateAllComponents(cfg, settings, plj, resultversion)
@@ -173,5 +173,4 @@ func nextStepSetup(cfg config, resultversion *versionCheck, plj *packageLocalJso
 	}
 
 	return nil
-
 }
